@@ -3,8 +3,7 @@ name: Tests
 on:
   push:
     branches:
-      - master
-      - '*.x'
+      - main
   pull_request:
   schedule:
     - cron: '0 0 * * *'
@@ -15,6 +14,27 @@ permissions:
 jobs:
   tests:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: tang_kinh_cac_test
+          POSTGRES_USER: tang_kinh_cac
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tang_kinh_cac -d tang_kinh_cac_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USERNAME: tang_kinh_cac
+      DB_PASSWORD: password
 
     strategy:
       fail-fast: true
@@ -33,17 +53,20 @@ jobs:
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_pgsql
           coverage: none
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      - name: Copy environment file
-        run: cp .env.example .env
+      - name: Copy test environment file
+        run: cp .env.testing.example .env.testing
 
-      - name: Generate app key
-        run: php artisan key:generate
+      - name: Generate test app key
+        run: php artisan key:generate --env=testing
+
+      - name: Migrate test database
+        run: php artisan migrate:fresh --env=testing --force
 
       - name: Execute tests
         run: php artisan test
