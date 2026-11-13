@@ -65,6 +65,14 @@ jobs:
       - name: Generate test app key
         run: php artisan key:generate --env=testing
 
+      - name: Validate formatting
+        run: |
+          composer format
+          git diff --exit-code
+
+      - name: Run static analysis
+        run: composer analyse
+
       - name: Migrate test database
         run: php artisan migrate:fresh --env=testing --force
 
