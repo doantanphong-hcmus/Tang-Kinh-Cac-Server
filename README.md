@@ -73,6 +73,14 @@ php artisan test
 
 Never run the test commands against the development or production database.
 
+## Quality commands
+
+```powershell
+composer format
+composer analyse
+composer test
+```
+
 ## Project documentation
 
 - [Backend specification](docs/specification.md)
