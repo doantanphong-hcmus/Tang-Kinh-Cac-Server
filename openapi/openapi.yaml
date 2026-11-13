@@ -4,7 +4,36 @@ info:
   version: 1.0.0
 servers:
   - url: /api/v1
-paths: {}
+paths:
+  /health:
+    get:
+      summary: Check application availability
+      operationId: getHealth
+      responses:
+        '200':
+          description: The application is available.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                      - status
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                          - ok
+              example:
+                data:
+                  status: ok
 components:
   headers:
     RequestId:
