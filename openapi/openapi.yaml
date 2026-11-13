@@ -5,3 +5,51 @@ info:
 servers:
   - url: /api/v1
 paths: {}
+components:
+  headers:
+    RequestId:
+      description: Server-generated identifier used to correlate a response with logs.
+      schema:
+        type: string
+        pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+  schemas:
+    SuccessResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data: {}
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/Error'
+    Error:
+      type: object
+      required:
+        - code
+        - message
+        - request_id
+      properties:
+        code:
+          type: string
+          pattern: '^[A-Z][A-Z0-9_]*$'
+          example: NOT_FOUND
+        message:
+          type: string
+          example: The requested resource was not found.
+        fields:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email:
+              - The email field is required.
+        request_id:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          example: 01JD0EXAMPLE00000000000000
