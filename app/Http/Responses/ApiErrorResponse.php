@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Responses;
 
+use App\Exceptions\RegistrationConflict;
 use App\Http\Middleware\PrepareApiRequest;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
@@ -32,6 +33,10 @@ final class ApiErrorResponse
 
         if ($exception instanceof AuthenticationException) {
             return self::make($request, 'UNAUTHENTICATED', 'Authentication is required.', 401);
+        }
+
+        if ($exception instanceof RegistrationConflict) {
+            return self::make($request, $exception->apiCode, $exception->getMessage(), 409);
         }
 
         $status = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : 500;

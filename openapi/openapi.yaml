@@ -5,6 +5,84 @@ info:
 servers:
   - url: /api/v1
 paths:
+  /auth/register:
+    post:
+      summary: Register a reader account
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              full_name: Nguyen Van An
+              username: reader.one
+              birth_date: '1990-06-15'
+              phone_number: '+84901234567'
+              email: reader@example.com
+              password: correct-horse-battery-staple
+              password_confirmation: correct-horse-battery-staple
+      responses:
+        '201':
+          description: The reader account was created without authenticating it.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+              example:
+                data:
+                  user:
+                    id: 1
+                    full_name: Nguyen Van An
+                    username: reader.one
+                    birth_date: '1990-06-15'
+                    phone_number: '+84901234567'
+                    email: reader@example.com
+                    role: reader
+        '409':
+          description: The normalized email address or username is already used.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailAlreadyUsed:
+                  value:
+                    error:
+                      code: EMAIL_ALREADY_USED
+                      message: The email address has already been used.
+                      request_id: 01JD0EXAMPLE00000000000000
+                usernameAlreadyUsed:
+                  value:
+                    error:
+                      code: USERNAME_ALREADY_USED
+                      message: The username has already been used.
+                      request_id: 01JD0EXAMPLE00000000000000
+        '422':
+          description: One or more registration fields are invalid.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many registration attempts were made.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /health:
     get:
       summary: Check application availability
@@ -42,6 +120,91 @@ components:
         type: string
         pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
   schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - full_name
+        - username
+        - birth_date
+        - phone_number
+        - email
+        - password
+        - password_confirmation
+      properties:
+        full_name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        username:
+          type: string
+          minLength: 4
+          maxLength: 20
+          pattern: '^[A-Za-z0-9._]+$'
+        birth_date:
+          type: string
+          format: date
+        phone_number:
+          type: string
+          pattern: '^\+?[0-9]{9,15}$'
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          writeOnly: true
+        password_confirmation:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          writeOnly: true
+    RegisterResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - user
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+    User:
+      type: object
+      required:
+        - id
+        - full_name
+        - username
+        - birth_date
+        - phone_number
+        - email
+        - role
+      properties:
+        id:
+          type: integer
+          format: int64
+        full_name:
+          type: string
+        username:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        phone_number:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum:
+            - reader
+            - admin
     SuccessResponse:
       type: object
       required:
