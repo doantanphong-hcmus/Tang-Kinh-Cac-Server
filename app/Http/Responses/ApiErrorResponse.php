@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Responses;
 
+use App\Exceptions\InvalidCredentials;
 use App\Exceptions\RegistrationConflict;
 use App\Http\Middleware\PrepareApiRequest;
 use Illuminate\Auth\AuthenticationException;
@@ -33,6 +34,15 @@ final class ApiErrorResponse
 
         if ($exception instanceof AuthenticationException) {
             return self::make($request, 'UNAUTHENTICATED', 'Authentication is required.', 401);
+        }
+
+        if ($exception instanceof InvalidCredentials) {
+            return self::make(
+                request: $request,
+                status: 401,
+                code: 'INVALID_CREDENTIALS',
+                message: $exception->getMessage(),
+            );
         }
 
         if ($exception instanceof RegistrationConflict) {

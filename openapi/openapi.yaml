@@ -5,6 +5,43 @@ info:
 servers:
   - url: /api/v1
 paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in and issue a personal access token
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many failed login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /auth/register:
     post:
       summary: Register a reader account
@@ -120,6 +157,50 @@ components:
         type: string
         pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
   schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+        - device_name
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: reader@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          writeOnly: true
+          example: secret-password
+        device_name:
+          type: string
+          maxLength: 100
+          example: iPhone
+    LoginResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - token
+            - token_type
+            - user
+          properties:
+            token:
+              type: string
+              description: Personal access token. This plain-text value is returned only when issued.
+            token_type:
+              type: string
+              enum:
+                - Bearer
+            user:
+              $ref: '#/components/schemas/User'
     RegisterRequest:
       type: object
       required:

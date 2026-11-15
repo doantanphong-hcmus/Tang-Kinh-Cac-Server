@@ -34,5 +34,14 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by(hash('sha256', $normalizedEmail.'|'.$request->ip()));
         });
+
+        RateLimiter::for('login', function (Request $request): Limit {
+            $email = $request->input('email');
+            $normalizedEmail = is_string($email) ? Str::lower(trim($email)) : '';
+
+            return Limit::perMinute(5)
+                ->by(hash('sha256', $normalizedEmail.'|'.$request->ip()))
+                ->after(fn ($response): bool => $response->getStatusCode() === 401);
+        });
     }
 }
