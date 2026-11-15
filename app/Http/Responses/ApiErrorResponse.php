@@ -13,6 +13,7 @@ use App\Http\Middleware\PrepareApiRequest;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -37,6 +38,15 @@ final class ApiErrorResponse
 
         if ($exception instanceof AuthenticationException) {
             return self::make($request, 'UNAUTHENTICATED', 'Authentication is required.', 401);
+        }
+
+        if ($exception instanceof InvalidSignatureException && $request->routeIs('media.*')) {
+            return self::make(
+                $request,
+                'INVALID_MEDIA_SIGNATURE',
+                'The media signature is invalid or has expired.',
+                403,
+            );
         }
 
         if ($exception instanceof InvalidCredentials) {

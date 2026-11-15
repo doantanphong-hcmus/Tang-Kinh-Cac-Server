@@ -538,6 +538,87 @@ paths:
                       code: EPUB_NOT_FOUND
                       message: No EPUB is available for this book.
                       request_id: 01JD0EXAMPLE00000000000000
+  /media/{file}/download:
+    get:
+      tags:
+        - EPUB
+      summary: Download an EPUB through a temporary signed URL
+      operationId: downloadEpub
+      parameters:
+        - name: file
+          in: path
+          required: true
+          description: Opaque book-file identifier from the EPUB descriptor.
+          schema:
+            type: integer
+            format: int64
+        - name: expires
+          in: query
+          required: true
+          description: Unix timestamp included in the signed URL.
+          schema:
+            type: integer
+            format: int64
+        - name: signature
+          in: query
+          required: true
+          description: URL signature covering the path and expiry.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The exact EPUB bytes streamed as an attachment.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Content-Length:
+              description: EPUB size in bytes.
+              schema:
+                type: integer
+                format: int64
+            Content-Disposition:
+              description: Attachment disposition with a server-generated safe filename.
+              schema:
+                type: string
+                example: attachment; filename=book-1-v2.epub
+            ETag:
+              description: Quoted SHA-256 checksum stored with the EPUB metadata.
+              schema:
+                type: string
+                example: '"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'
+          content:
+            application/epub+zip:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: The signed URL is missing, modified, or expired.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: INVALID_MEDIA_SIGNATURE
+                  message: The media signature is invalid or has expired.
+                  request_id: 01JD0EXAMPLE00000000000000
+        '404':
+          description: The signed identifier no longer resolves to an active EPUB.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: EPUB_NOT_FOUND
+                  message: No EPUB is available for this book.
+                  request_id: 01JD0EXAMPLE00000000000000
   /genres:
     get:
       tags:
