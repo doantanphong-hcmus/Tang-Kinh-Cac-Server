@@ -429,13 +429,16 @@ Each list item must include:
   "country": "Vietnam",
   "access_level": "free",
   "status": "published",
-  "average_rating": "4.9",
+  "average_rating": "4.90",
   "review_count": 1200,
   "cover_url": "https://example.test/media/...",
   "has_epub": true,
   "has_audiobook": false
 }
 ```
+
+`average_rating` is a decimal string with two fractional digits. `cover_url` is nullable when no active cover exists;
+the content flags are `false` when their corresponding active file is unavailable.
 
 ### 11.2 Book Detail
 
@@ -456,7 +459,7 @@ Authorization: Bearer <token>
 - Historical setting.
 - Synopsis.
 - Keywords.
-- Available content types.
+- Available content types as an array containing `epub` and/or `audiobook`.
 
 Missing, draft, or archived books return `404 BOOK_NOT_FOUND` to reader accounts.
 
