@@ -22,6 +22,7 @@ final class GenreResource extends JsonResource
             'id' => $this->id,
             'slug' => $this->slug,
             'name' => $this->name,
+            'published_book_count' => $this->whenCounted('publishedBooks'),
         ];
     }
 }

@@ -382,6 +382,98 @@ paths:
                   code: BOOK_NOT_FOUND
                   message: The requested book was not found.
                   request_id: 01JD0EXAMPLE00000000000000
+  /genres:
+    get:
+      tags:
+        - Catalog
+      summary: List active genres
+      operationId: listGenres
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Active genres with published book counts.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreCollectionResponse'
+        '401':
+          description: The access token is missing, invalid, or revoked.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /genres/{genre}/books:
+    get:
+      tags:
+        - Catalog
+      summary: List published books in an active genre
+      operationId: listGenreBooks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: genre
+          in: path
+          required: true
+          description: Numeric genre identifier or unique slug.
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Published books assigned to the active genre.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookCollectionResponse'
+        '401':
+          description: The access token is missing, invalid, or revoked.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The genre is missing or inactive.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: One or more pagination parameters are invalid.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /health:
     get:
       summary: Check application availability
@@ -583,6 +675,25 @@ components:
           type: string
         name:
           type: string
+    GenreCollectionResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenreSummary'
+    GenreSummary:
+      allOf:
+        - $ref: '#/components/schemas/Genre'
+        - type: object
+          required:
+            - published_book_count
+          properties:
+            published_book_count:
+              type: integer
+              minimum: 0
     CurrentUserResponse:
       type: object
       required:
