@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\BookAccessLevel;
+use App\BookFileType;
 use App\BookStatus;
 use Database\Factories\BookFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -78,6 +79,14 @@ class Book extends Model
     }
 
     /**
+     * @return HasMany<BookFile, $this>
+     */
+    public function files(): HasMany
+    {
+        return $this->hasMany(BookFile::class);
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
@@ -99,6 +108,23 @@ class Book extends Model
     protected function visibleToReaders(Builder $query): Builder
     {
         return $query->where('status', BookStatus::Published->value);
+    }
+
+    /**
+     * @param  Builder<Book>  $query
+     * @return Builder<Book>
+     */
+    #[Scope]
+    protected function withContentAvailability(Builder $query): Builder
+    {
+        return $query->withExists([
+            'files as has_epub' => fn (Builder $files): Builder => $files
+                ->where('type', BookFileType::Epub->value)
+                ->where('is_active', true),
+            'files as has_audiobook' => fn (Builder $files): Builder => $files
+                ->where('type', BookFileType::Audio->value)
+                ->where('is_active', true),
+        ]);
     }
 
     /**

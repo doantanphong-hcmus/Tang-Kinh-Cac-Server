@@ -7,6 +7,7 @@ namespace Tests\Feature\Catalog;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookAlternativeTitle;
+use App\Models\BookFile;
 use App\Models\BookKeyword;
 use App\Models\Genre;
 use App\Models\User;
@@ -57,6 +58,8 @@ final class BookDetailTest extends TestCase
         BookKeyword::factory()->for($book)->create([
             'value' => 'thân phận',
         ]);
+        BookFile::factory()->for($book)->create();
+        BookFile::factory()->audio()->for($book)->create();
         $this->authenticate();
 
         $response = $this->getJson("/api/v1/books/{$book->id}");
@@ -92,9 +95,9 @@ final class BookDetailTest extends TestCase
                     'average_rating' => '4.90',
                     'review_count' => 1200,
                     'cover_url' => null,
-                    'has_epub' => false,
-                    'has_audiobook' => false,
-                    'available_content_types' => [],
+                    'has_epub' => true,
+                    'has_audiobook' => true,
+                    'available_content_types' => ['epub', 'audiobook'],
                 ],
             ]);
     }

@@ -38,8 +38,10 @@ final class BookDetailResource extends BookResource
                 'keywords',
                 fn (): array => $this->keywords->pluck('value')->values()->all(),
             ),
-            // shortcut: File metadata starts in E01; populate content types from active files then.
-            'available_content_types' => [],
+            'available_content_types' => array_keys(array_filter([
+                'epub' => (bool) ($this->has_epub ?? false),
+                'audiobook' => (bool) ($this->has_audiobook ?? false),
+            ])),
         ]);
     }
 }

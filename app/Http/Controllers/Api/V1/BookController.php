@@ -18,6 +18,7 @@ final class BookController extends Controller
         $filters = $request->filters();
         $query = Book::query()
             ->visibleToReaders()
+            ->withContentAvailability()
             ->with('author');
 
         if ($filters['q'] !== null) {
@@ -49,7 +50,9 @@ final class BookController extends Controller
 
     public function show(string $book): BookDetailResource
     {
-        $query = Book::query()->visibleToReaders();
+        $query = Book::query()
+            ->visibleToReaders()
+            ->withContentAvailability();
 
         if (ctype_digit($book)) {
             $query->whereKey((int) $book);

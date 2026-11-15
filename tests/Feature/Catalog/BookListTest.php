@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Catalog;
 
 use App\Models\Book;
+use App\Models\BookFile;
 use App\Models\Genre;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -44,6 +45,23 @@ final class BookListTest extends TestCase
             ->assertJsonPath('meta.total', 2)
             ->assertJsonPath('meta.last_page', 1)
             ->assertJsonMissingPath('links');
+    }
+
+    public function test_reports_only_active_file_content(): void
+    {
+        $book = Book::factory()->published()->create();
+        BookFile::factory()->for($book)->create();
+        BookFile::factory()->audio()->inactive()->for($book)->create();
+        $this->authenticate();
+
+        $response = $this->getJson('/api/v1/books');
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.0.has_epub', true)
+            ->assertJsonPath('data.0.has_audiobook', false)
+            ->assertJsonMissingPath('data.0.storage_path')
+            ->assertJsonMissingPath('data.0.storage_disk');
     }
 
     public function test_searches_titles_without_accents_or_case(): void
