@@ -17,31 +17,77 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: reader@example.com
+              password: correct-horse-battery-staple
+              device_name: Pixel 9
       responses:
         '200':
           description: Login successful
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
+              example:
+                data:
+                  token: 1|plain-text-token-returned-once
+                  token_type: Bearer
+                  user:
+                    id: 1
+                    full_name: Nguyen Van An
+                    username: reader.one
+                    birth_date: '1990-06-15'
+                    phone_number: '+84901234567'
+                    email: reader@example.com
+                    role: reader
         '401':
           description: Invalid credentials
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: INVALID_CREDENTIALS
+                  message: The provided credentials are invalid.
+                  request_id: 01JD0EXAMPLE00000000000000
         '422':
           description: Validation failed
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: The request contains invalid fields.
+                  fields:
+                    email:
+                      - The email field must be a valid email address.
+                  request_id: 01JD0EXAMPLE00000000000000
         '429':
           description: Too many failed login attempts
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: TOO_MANY_REQUESTS
+                  message: Too many requests were made.
+                  request_id: 01JD0EXAMPLE00000000000000
   /auth/me:
     get:
       tags:
@@ -60,6 +106,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CurrentUserResponse'
+              example:
+                data:
+                  id: 1
+                  full_name: Nguyen Van An
+                  username: reader.one
+                  birth_date: '1990-06-15'
+                  phone_number: '+84901234567'
+                  email: reader@example.com
+                  role: reader
         '401':
           description: The access token is missing, invalid, or revoked.
           headers:
@@ -69,6 +124,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: UNAUTHENTICATED
+                  message: Authentication is required.
+                  request_id: 01JD0EXAMPLE00000000000000
   /auth/logout:
     post:
       tags:
@@ -80,6 +140,9 @@ paths:
       responses:
         '204':
           description: The current access token was revoked.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
         '401':
           description: The access token is missing, invalid, or revoked.
           headers:
@@ -89,8 +152,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: UNAUTHENTICATED
+                  message: Authentication is required.
+                  request_id: 01JD0EXAMPLE00000000000000
   /auth/register:
     post:
+      tags:
+        - Authentication
       summary: Register a reader account
       operationId: registerUser
       requestBody:
@@ -158,6 +228,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: The request contains invalid fields.
+                  fields:
+                    email:
+                      - The email field must be a valid email address.
+                  request_id: 01JD0EXAMPLE00000000000000
         '429':
           description: Too many registration attempts were made.
           headers:
@@ -167,6 +245,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: TOO_MANY_REQUESTS
+                  message: Too many requests were made.
+                  request_id: 01JD0EXAMPLE00000000000000
   /health:
     get:
       summary: Check application availability
@@ -201,7 +284,7 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: Sanctum token
+      bearerFormat: Opaque token
   headers:
     RequestId:
       description: Server-generated identifier used to correlate a response with logs.
@@ -237,6 +320,7 @@ components:
           example: secret-password
         device_name:
           type: string
+          minLength: 1
           maxLength: 100
           example: iPhone
     LoginResponse:

@@ -76,6 +76,7 @@ class RegisterTest extends TestCase
             ->assertConflict()
             ->assertJsonPath('error.code', 'EMAIL_ALREADY_USED')
             ->assertJsonPath('error.message', 'The email address has already been used.');
+        $this->assertStringNotContainsString('correct-horse-battery-staple', $response->getContent());
         $this->assertDatabaseCount('users', 1);
     }
 

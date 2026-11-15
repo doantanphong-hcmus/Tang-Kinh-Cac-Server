@@ -24,14 +24,25 @@ class LoginTest extends TestCase
             'device_name' => '  iPhone  ',
         ]);
 
-        $response
-            ->assertOk()
-            ->assertJsonPath('data.token_type', 'Bearer')
-            ->assertJsonPath('data.user.id', $user->id)
-            ->assertJsonPath('data.user.email', 'reader@example.com')
-            ->assertJsonMissingPath('data.user.password');
-
+        $response->assertOk();
         $plainTextToken = $response->json('data.token');
+        $this->assertIsString($plainTextToken);
+        $response->assertExactJson([
+            'data' => [
+                'token' => $plainTextToken,
+                'token_type' => 'Bearer',
+                'user' => [
+                    'id' => $user->id,
+                    'full_name' => $user->full_name,
+                    'username' => $user->username,
+                    'birth_date' => $user->birth_date->toDateString(),
+                    'phone_number' => $user->phone_number,
+                    'email' => 'reader@example.com',
+                    'role' => $user->role->value,
+                ],
+            ],
+        ]);
+
         $storedToken = $user->tokens()->sole();
         [, $tokenSecret] = explode('|', $plainTextToken, 2);
 
@@ -40,36 +51,45 @@ class LoginTest extends TestCase
         $this->assertNotSame($plainTextToken, $storedToken->token);
     }
 
-    public function test_invalid_credentials_use_the_same_generic_response(): void
+    public function test_returns_401_with_generic_error_for_wrong_password(): void
     {
         User::factory()->create([
             'email' => 'reader@example.com',
         ]);
 
-        $wrongPassword = $this->postJson('/api/v1/auth/login', [
+        $response = $this->postJson('/api/v1/auth/login', [
             'email' => 'reader@example.com',
             'password' => 'wrong-password',
             'device_name' => 'Browser',
         ]);
 
-        $unknownEmail = $this->postJson('/api/v1/auth/login', [
+        $response
+            ->assertUnauthorized()
+            ->assertJsonPath('error.code', 'INVALID_CREDENTIALS')
+            ->assertJsonPath('error.message', 'The provided credentials are invalid.')
+            ->assertJsonStructure(['error' => ['code', 'message', 'request_id']]);
+        $this->assertStringNotContainsString('wrong-password', $response->getContent());
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
+    public function test_returns_401_with_same_generic_error_for_unknown_email(): void
+    {
+        $response = $this->postJson('/api/v1/auth/login', [
             'email' => 'missing@example.com',
             'password' => 'wrong-password',
             'device_name' => 'Browser',
         ]);
 
-        foreach ([$wrongPassword, $unknownEmail] as $response) {
-            $response
-                ->assertUnauthorized()
-                ->assertJsonPath('error.code', 'INVALID_CREDENTIALS')
-                ->assertJsonPath('error.message', 'The provided credentials are invalid.')
-                ->assertJsonStructure(['error' => ['code', 'message', 'request_id']]);
-        }
-
+        $response
+            ->assertUnauthorized()
+            ->assertJsonPath('error.code', 'INVALID_CREDENTIALS')
+            ->assertJsonPath('error.message', 'The provided credentials are invalid.')
+            ->assertJsonStructure(['error' => ['code', 'message', 'request_id']]);
+        $this->assertStringNotContainsString('wrong-password', $response->getContent());
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 
-    public function test_login_requires_valid_input(): void
+    public function test_returns_422_for_invalid_login_fields(): void
     {
         $this->postJson('/api/v1/auth/login', [
             'email' => 'not-an-email',
@@ -77,7 +97,10 @@ class LoginTest extends TestCase
             'device_name' => str_repeat('a', 101),
         ])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['email', 'password', 'device_name'], 'error.fields');
+            ->assertJsonPath('error.code', 'VALIDATION_ERROR')
+            ->assertJsonPath('error.fields.email.0', 'The email field must be a valid email address.')
+            ->assertJsonPath('error.fields.password.0', 'The password field is required.')
+            ->assertJsonPath('error.fields.device_name.0', 'The device name field must not be greater than 100 characters.');
     }
 
     public function test_login_is_rate_limited_after_repeated_authentication_failures(): void

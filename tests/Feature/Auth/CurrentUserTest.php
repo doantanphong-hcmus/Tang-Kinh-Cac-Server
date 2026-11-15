@@ -47,4 +47,16 @@ class CurrentUserTest extends TestCase
             ->assertUnauthorized()
             ->assertJsonPath('error.code', 'UNAUTHENTICATED');
     }
+
+    public function test_returns_401_when_token_has_been_revoked(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('Revoked device');
+        $token->accessToken->delete();
+
+        $this->withToken($token->plainTextToken)
+            ->getJson('/api/v1/auth/me')
+            ->assertUnauthorized()
+            ->assertJsonPath('error.code', 'UNAUTHENTICATED');
+    }
 }
