@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Responses;
 
 use App\Exceptions\BookNotFound;
+use App\Exceptions\ContentAccessDenied;
+use App\Exceptions\EpubNotFound;
 use App\Exceptions\InvalidCredentials;
 use App\Exceptions\RegistrationConflict;
 use App\Http\Middleware\PrepareApiRequest;
@@ -52,6 +54,14 @@ final class ApiErrorResponse
 
         if ($exception instanceof BookNotFound) {
             return self::make($request, 'BOOK_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof ContentAccessDenied) {
+            return self::make($request, 'CONTENT_ACCESS_DENIED', $exception->getMessage(), 403);
+        }
+
+        if ($exception instanceof EpubNotFound) {
+            return self::make($request, 'EPUB_NOT_FOUND', $exception->getMessage(), 404);
         }
 
         $status = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : 500;

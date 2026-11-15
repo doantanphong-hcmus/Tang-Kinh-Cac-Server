@@ -453,6 +453,91 @@ paths:
                   code: BOOK_NOT_FOUND
                   message: The requested book was not found.
                   request_id: 01JD0EXAMPLE00000000000000
+  /books/{book}/epub:
+    get:
+      tags:
+        - EPUB
+      summary: Get an authorized EPUB descriptor
+      operationId: getEpubDescriptor
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: book
+          in: path
+          required: true
+          description: Numeric book identifier or unique slug.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Metadata and a short-lived signed download URL for the active EPUB.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EpubDescriptorResponse'
+              example:
+                data:
+                  file_id: 10
+                  book_id: 1
+                  version: 2
+                  mime_type: application/epub+zip
+                  size: 2457600
+                  checksum_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                  download_url: https://example.test/api/v1/media/10/download?expires=1794744300&signature=example
+                  expires_at: '2026-11-15T12:05:00Z'
+        '401':
+          description: The access token is missing, invalid, or revoked.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: UNAUTHENTICATED
+                  message: Authentication is required.
+                  request_id: 01JD0EXAMPLE00000000000000
+        '403':
+          description: The authenticated account cannot access VIP content.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: CONTENT_ACCESS_DENIED
+                  message: Your account cannot access this content.
+                  request_id: 01JD0EXAMPLE00000000000000
+        '404':
+          description: The book is unavailable or has no active EPUB.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                bookNotFound:
+                  value:
+                    error:
+                      code: BOOK_NOT_FOUND
+                      message: The requested book was not found.
+                      request_id: 01JD0EXAMPLE00000000000000
+                epubNotFound:
+                  value:
+                    error:
+                      code: EPUB_NOT_FOUND
+                      message: No EPUB is available for this book.
+                      request_id: 01JD0EXAMPLE00000000000000
   /genres:
     get:
       tags:
@@ -667,6 +752,51 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/BookDetail'
+    EpubDescriptorResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/EpubDescriptor'
+    EpubDescriptor:
+      type: object
+      required:
+        - file_id
+        - book_id
+        - version
+        - mime_type
+        - size
+        - checksum_sha256
+        - download_url
+        - expires_at
+      properties:
+        file_id:
+          type: integer
+          format: int64
+        book_id:
+          type: integer
+          format: int64
+        version:
+          type: integer
+          minimum: 1
+        mime_type:
+          type: string
+          enum:
+            - application/epub+zip
+        size:
+          type: integer
+          format: int64
+          minimum: 1
+        checksum_sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        download_url:
+          type: string
+          format: uri
+        expires_at:
+          type: string
+          format: date-time
     BookDetail:
       allOf:
         - $ref: '#/components/schemas/BookSummary'
