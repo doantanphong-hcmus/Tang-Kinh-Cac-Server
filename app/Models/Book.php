@@ -100,4 +100,45 @@ class Book extends Model
     {
         return $query->where('status', BookStatus::Published->value);
     }
+
+    /**
+     * @param  Builder<Book>  $query
+     * @return Builder<Book>
+     */
+    #[Scope]
+    protected function search(Builder $query, string $term): Builder
+    {
+        $term = trim($term);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        $escapedTerm = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $term);
+        $pattern = "%{$escapedTerm}%";
+
+        // shortcut: unaccent ILIKE scans text, add indexed search vectors when catalog query plans require them.
+        return $query->where(function (Builder $query) use ($pattern): void {
+            $query
+                ->whereRaw("unaccent(books.title) ILIKE unaccent(?) ESCAPE '\\'", [$pattern])
+                ->orWhereRaw("unaccent(books.original_title) ILIKE unaccent(?) ESCAPE '\\'", [$pattern])
+                ->orWhereRaw("unaccent(books.synopsis) ILIKE unaccent(?) ESCAPE '\\'", [$pattern])
+                ->orWhereHas('author', fn (Builder $authorQuery): Builder => $authorQuery->whereRaw(
+                    "(unaccent(authors.name) ILIKE unaccent(?) ESCAPE '\\' OR unaccent(authors.original_name) ILIKE unaccent(?) ESCAPE '\\')",
+                    [$pattern, $pattern],
+                ))
+                ->orWhereHas('genres', fn (Builder $genreQuery): Builder => $genreQuery->whereRaw(
+                    "unaccent(genres.name) ILIKE unaccent(?) ESCAPE '\\'",
+                    [$pattern],
+                ))
+                ->orWhereHas('alternativeTitles', fn (Builder $titleQuery): Builder => $titleQuery->whereRaw(
+                    "unaccent(book_alternative_titles.title) ILIKE unaccent(?) ESCAPE '\\'",
+                    [$pattern],
+                ))
+                ->orWhereHas('keywords', fn (Builder $keywordQuery): Builder => $keywordQuery->whereRaw(
+                    "unaccent(book_keywords.value) ILIKE unaccent(?) ESCAPE '\\'",
+                    [$pattern],
+                ));
+        });
+    }
 }
