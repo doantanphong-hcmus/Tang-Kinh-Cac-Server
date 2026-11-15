@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Responses;
 
+use App\Exceptions\BookNotFound;
 use App\Exceptions\InvalidCredentials;
 use App\Exceptions\RegistrationConflict;
 use App\Http\Middleware\PrepareApiRequest;
@@ -47,6 +48,10 @@ final class ApiErrorResponse
 
         if ($exception instanceof RegistrationConflict) {
             return self::make($request, $exception->apiCode, $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof BookNotFound) {
+            return self::make($request, 'BOOK_NOT_FOUND', $exception->getMessage(), 404);
         }
 
         $status = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : 500;

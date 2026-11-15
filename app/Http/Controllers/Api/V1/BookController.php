@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\BookNotFound;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\ListBooksRequest;
 use App\Http\Resources\Api\V1\BookCollection;
+use App\Http\Resources\Api\V1\BookDetailResource;
 use App\Models\Book;
 
 final class BookController extends Controller
@@ -43,5 +45,26 @@ final class BookController extends Controller
         };
 
         return new BookCollection($query->paginate($filters['per_page']));
+    }
+
+    public function show(string $book): BookDetailResource
+    {
+        $query = Book::query()->visibleToReaders();
+
+        if (ctype_digit($book)) {
+            $query->whereKey((int) $book);
+        } else {
+            $query->where('slug', $book);
+        }
+
+        $bookModel = $query
+            ->with(['alternativeTitles', 'author', 'genres', 'keywords'])
+            ->first();
+
+        if ($bookModel === null) {
+            throw new BookNotFound;
+        }
+
+        return new BookDetailResource($bookModel);
     }
 }

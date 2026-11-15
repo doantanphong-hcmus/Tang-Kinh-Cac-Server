@@ -28,4 +28,5 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/auth/me', CurrentUserController::class)->name('auth.me');
     Route::post('/auth/logout', LogoutController::class)->name('auth.logout');
     Route::get('/books', [BookController::class, 'index'])->name('books.index');
+    Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
 });
