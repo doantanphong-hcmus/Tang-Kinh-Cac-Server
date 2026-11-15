@@ -250,6 +250,90 @@ paths:
                   code: TOO_MANY_REQUESTS
                   message: Too many requests were made.
                   request_id: 01JD0EXAMPLE00000000000000
+  /books:
+    get:
+      tags:
+        - Catalog
+      summary: List published catalog books
+      operationId: listBooks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+            maxLength: 200
+          description: Accent-insensitive search across catalog metadata.
+        - name: genre
+          in: query
+          schema:
+            type: string
+            maxLength: 255
+          description: Genre slug.
+        - name: country
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+          description: Case-insensitive stored country value.
+        - name: access_level
+          in: query
+          schema:
+            type: string
+            enum:
+              - free
+              - vip
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: title
+            enum:
+              - title
+              - newest
+              - rating
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Published books matching the requested filters.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookCollectionResponse'
+        '401':
+          description: The access token is missing, invalid, or revoked.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: One or more query parameters are invalid.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /health:
     get:
       summary: Check application availability
@@ -292,6 +376,80 @@ components:
         type: string
         pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
   schemas:
+    BookAuthorSummary:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    BookCollectionResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookSummary'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    BookSummary:
+      type: object
+      required:
+        - id
+        - slug
+        - title
+        - author
+        - country
+        - access_level
+        - status
+        - average_rating
+        - review_count
+        - cover_url
+        - has_epub
+        - has_audiobook
+      properties:
+        id:
+          type: integer
+          format: int64
+        slug:
+          type: string
+        title:
+          type: string
+        author:
+          $ref: '#/components/schemas/BookAuthorSummary'
+        country:
+          type: string
+        access_level:
+          type: string
+          enum:
+            - free
+            - vip
+        status:
+          type: string
+          enum:
+            - published
+        average_rating:
+          type: string
+          pattern: '^\d+\.\d{2}$'
+          example: '4.90'
+        review_count:
+          type: integer
+          minimum: 0
+        cover_url:
+          type: string
+          format: uri
+          nullable: true
+        has_epub:
+          type: boolean
+        has_audiobook:
+          type: boolean
     CurrentUserResponse:
       type: object
       required:
@@ -344,6 +502,27 @@ components:
                 - Bearer
             user:
               $ref: '#/components/schemas/User'
+    PaginationMeta:
+      type: object
+      required:
+        - current_page
+        - per_page
+        - total
+        - last_page
+      properties:
+        current_page:
+          type: integer
+          minimum: 1
+        per_page:
+          type: integer
+          minimum: 1
+          maximum: 50
+        total:
+          type: integer
+          minimum: 0
+        last_page:
+          type: integer
+          minimum: 1
     RegisterRequest:
       type: object
       required:

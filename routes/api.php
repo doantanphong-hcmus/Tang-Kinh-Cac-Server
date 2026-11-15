@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\BookController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\LoginController;
 use App\Http\Controllers\Api\V1\LogoutController;
@@ -26,4 +27,5 @@ Route::post('/auth/login', LoginController::class)
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/auth/me', CurrentUserController::class)->name('auth.me');
     Route::post('/auth/logout', LogoutController::class)->name('auth.logout');
+    Route::get('/books', [BookController::class, 'index'])->name('books.index');
 });
