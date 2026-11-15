@@ -36,12 +36,7 @@ jobs:
       DB_USERNAME: tang_kinh_cac
       DB_PASSWORD: password
 
-    strategy:
-      fail-fast: true
-      matrix:
-        php: [8.3, 8.4, 8.5]
-
-    name: PHP ${{ matrix.php }}
+    name: PHP 8.5
 
     steps:
       - name: Checkout code
@@ -52,7 +47,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: 8.5
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_pgsql
           coverage: none
 
