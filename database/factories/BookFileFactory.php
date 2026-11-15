@@ -28,7 +28,7 @@ class BookFileFactory extends Factory
             'book_id' => Book::factory(),
             'type' => BookFileType::Epub,
             'title' => null,
-            'storage_disk' => 'local',
+            'storage_disk' => 'media',
             'storage_path' => "books/{$filename}",
             'original_filename' => $filename,
             'mime_type' => 'application/epub+zip',

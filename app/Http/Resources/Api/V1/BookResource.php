@@ -31,7 +31,7 @@ class BookResource extends JsonResource
             'status' => $this->status->value,
             'average_rating' => $this->average_rating,
             'review_count' => $this->review_count,
-            // shortcut: Cover URLs require the private storage boundary introduced in E02.
+            // shortcut: Cover delivery is deferred until the client requires a signed cover endpoint.
             'cover_url' => null,
             'has_epub' => (bool) ($this->has_epub ?? false),
             'has_audiobook' => (bool) ($this->has_audiobook ?? false),

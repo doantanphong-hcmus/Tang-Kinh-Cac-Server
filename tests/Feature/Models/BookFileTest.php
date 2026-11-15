@@ -26,5 +26,7 @@ final class BookFileTest extends TestCase
         $this->assertTrue($file->is_active);
         $this->assertTrue($file->book->is($book));
         $this->assertTrue($book->files()->whereKey($file)->exists());
+        $this->assertArrayNotHasKey('storage_disk', $file->toArray());
+        $this->assertArrayNotHasKey('storage_path', $file->toArray());
     }
 }

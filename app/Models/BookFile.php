@@ -7,6 +7,7 @@ namespace App\Models;
 use App\BookFileType;
 use Database\Factories\BookFileFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'duration_seconds',
     'is_active',
 ])]
+#[Hidden(['storage_disk', 'storage_path'])]
 class BookFile extends Model
 {
     /** @use HasFactory<BookFileFactory> */
