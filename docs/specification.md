@@ -843,5 +843,20 @@ AudiobookGateway
   getAudioTracks
 ```
 
+The `BookCatalogGateway` transport mapping is:
+
+| Gateway method | HTTP operation | Success DTO |
+| --- | --- | --- |
+| `getBooks` | `GET /api/v1/books` | `BookCollectionResponse` |
+| `getBook` | `GET /api/v1/books/{book}` | `BookDetailResponse` |
+| `getGenres` | `GET /api/v1/genres` | `GenreCollectionResponse` |
+| `getBooksByGenre` | `GET /api/v1/genres/{genre}/books` | `BookCollectionResponse` |
+
+Android transport DTOs must preserve the JSON contract: identifiers are 64-bit integers, `average_rating` is a
+two-decimal string, `cover_url` is nullable, content availability fields are booleans or string arrays, and paginated
+responses expose `current_page`, `per_page`, `total`, and `last_page`. Path parameters accept either a numeric
+identifier or a unique slug. The data layer maps these transport DTOs into Android domain models; UI code must not
+depend directly on JSON field names or error envelopes.
+
 Retrofit DTOs, HTTP responses, and transport errors must be mapped inside Android data-layer implementations. The
 server must not require Android UI code to understand Laravel, Sanctum, PostgreSQL, or the selected storage provider.

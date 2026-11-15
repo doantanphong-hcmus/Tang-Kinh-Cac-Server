@@ -316,6 +316,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BookCollectionResponse'
+              example:
+                data:
+                  - id: 1
+                    slug: truyen-kieu
+                    title: Truyện Kiều
+                    author:
+                      id: 1
+                      name: Nguyễn Du
+                    country: Vietnam
+                    access_level: free
+                    status: published
+                    average_rating: '4.90'
+                    review_count: 1200
+                    cover_url: null
+                    has_epub: false
+                    has_audiobook: false
+                meta:
+                  current_page: 1
+                  per_page: 20
+                  total: 1
+                  last_page: 1
         '401':
           description: The access token is missing, invalid, or revoked.
           headers:
@@ -325,6 +346,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: UNAUTHENTICATED
+                  message: Authentication is required.
+                  request_id: 01JD0EXAMPLE00000000000000
         '422':
           description: One or more query parameters are invalid.
           headers:
@@ -334,6 +360,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: The request contains invalid fields.
+                  fields:
+                    per_page:
+                      - The per page field must be between 1 and 50.
+                  request_id: 01JD0EXAMPLE00000000000000
   /books/{book}:
     get:
       tags:
@@ -359,6 +393,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BookDetailResponse'
+              example:
+                data:
+                  id: 1
+                  slug: truyen-kieu
+                  title: Truyện Kiều
+                  original_title: Đoạn trường tân thanh
+                  alternative_titles:
+                    - Kim Vân Kiều truyện
+                  author:
+                    id: 1
+                    name: Nguyễn Du
+                    original_name: Tố Như
+                  country: Vietnam
+                  original_language: Vietnamese
+                  publication_period: Early 19th century
+                  genres:
+                    - id: 1
+                      slug: van-hoc-co-dien
+                      name: Văn học cổ điển
+                  structure: 3,254 lines of lục bát verse
+                  historical_setting: A society shaped by family duty.
+                  synopsis: A gifted young woman protects her family.
+                  keywords:
+                    - thân phận
+                  access_level: free
+                  status: published
+                  average_rating: '4.90'
+                  review_count: 1200
+                  cover_url: null
+                  has_epub: false
+                  has_audiobook: false
+                  available_content_types: []
         '401':
           description: The access token is missing, invalid, or revoked.
           headers:
@@ -368,6 +434,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: UNAUTHENTICATED
+                  message: Authentication is required.
+                  request_id: 01JD0EXAMPLE00000000000000
         '404':
           description: The book is missing or is not published.
           headers:
@@ -400,6 +471,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenreCollectionResponse'
+              example:
+                data:
+                  - id: 1
+                    slug: van-hoc-co-dien
+                    name: Văn học cổ điển
+                    published_book_count: 8
         '401':
           description: The access token is missing, invalid, or revoked.
           headers:
@@ -409,6 +486,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: UNAUTHENTICATED
+                  message: Authentication is required.
+                  request_id: 01JD0EXAMPLE00000000000000
   /genres/{genre}/books:
     get:
       tags:
@@ -447,6 +529,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BookCollectionResponse'
+              example:
+                data:
+                  - id: 1
+                    slug: truyen-kieu
+                    title: Truyện Kiều
+                    author:
+                      id: 1
+                      name: Nguyễn Du
+                    country: Vietnam
+                    access_level: free
+                    status: published
+                    average_rating: '4.90'
+                    review_count: 1200
+                    cover_url: null
+                    has_epub: false
+                    has_audiobook: false
+                meta:
+                  current_page: 1
+                  per_page: 20
+                  total: 1
+                  last_page: 1
         '401':
           description: The access token is missing, invalid, or revoked.
           headers:
@@ -456,6 +559,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: UNAUTHENTICATED
+                  message: Authentication is required.
+                  request_id: 01JD0EXAMPLE00000000000000
         '404':
           description: The genre is missing or inactive.
           headers:
@@ -465,6 +573,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: The requested resource was not found.
+                  request_id: 01JD0EXAMPLE00000000000000
         '422':
           description: One or more pagination parameters are invalid.
           headers:
@@ -474,6 +587,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: The request contains invalid fields.
+                  fields:
+                    per_page:
+                      - The per page field must be between 1 and 50.
+                  request_id: 01JD0EXAMPLE00000000000000
   /health:
     get:
       summary: Check application availability
