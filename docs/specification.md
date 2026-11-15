@@ -673,13 +673,27 @@ The development seeder must provide:
 
 - One reader account with a documented non-production password.
 - One admin account with a documented non-production password.
-- The eight current Android catalog books.
+- The eight current Android catalog books listed below.
 - Authors, genres, alternative titles, and keywords required by those books.
 - At least one free book with a sample EPUB.
 - At least one free book with two ordered sample audio tracks.
 - At least one VIP book for denied-access tests.
 
+| Slug | Title | Author | Access |
+| --- | --- | --- | --- |
+| `chinh-phu-ngam` | Chinh phụ ngâm | Đặng Trần Côn | Free |
+| `cung-oan-ngam-khuc` | Cung oán ngâm khúc | Nguyễn Gia Thiều | Free |
+| `dai-viet-su-ky-toan-thu` | Đại Việt sử ký toàn thư | Ngô Sĩ Liên | VIP |
+| `hoang-le-nhat-thong-chi` | Hoàng Lê nhất thống chí | Ngô gia văn phái | Free |
+| `luc-van-tien` | Lục Vân Tiên | Nguyễn Đình Chiểu | Free |
+| `quoc-am-thi-tap` | Quốc âm thi tập | Nguyễn Trãi | Free |
+| `truyen-kieu` | Truyện Kiều | Nguyễn Du | Free |
+| `vu-trung-tuy-but` | Vũ trung tùy bút | Phạm Đình Hổ | Free |
+
 Seed data must use redistributable or project-owned sample media. Copyrighted production files must not be committed.
+The catalog seeder contains project-authored summaries and metadata only; it does not include book text, covers, EPUBs,
+or recordings. Each media asset added later must record its own source and redistribution permission. This catalog list
+does not authorize a particular digital edition, translation, cover, or recording.
 
 ## 16. Code Organization and Quality
 

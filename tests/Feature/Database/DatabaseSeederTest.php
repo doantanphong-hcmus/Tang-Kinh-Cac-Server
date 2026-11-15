@@ -30,16 +30,61 @@ final class DatabaseSeederTest extends TestCase
         $this->assertTrue(Hash::check('password', $reader->password));
         $this->assertTrue(Hash::check('password', $admin->password));
 
+        $catalog = Book::query()
+            ->with('author')
+            ->orderBy('slug')
+            ->get()
+            ->mapWithKeys(fn (Book $book): array => [
+                $book->slug => [
+                    'title' => $book->title,
+                    'author' => $book->author->name,
+                    'access_level' => $book->access_level,
+                ],
+            ])
+            ->all();
+
         $this->assertSame([
-            'chinh-phu-ngam',
-            'cung-oan-ngam-khuc',
-            'dai-viet-su-ky-toan-thu',
-            'hoang-le-nhat-thong-chi',
-            'luc-van-tien',
-            'quoc-am-thi-tap',
-            'truyen-kieu',
-            'vu-trung-tuy-but',
-        ], Book::query()->orderBy('slug')->pluck('slug')->all());
+            'chinh-phu-ngam' => [
+                'title' => 'Chinh phụ ngâm',
+                'author' => 'Đặng Trần Côn',
+                'access_level' => BookAccessLevel::Free,
+            ],
+            'cung-oan-ngam-khuc' => [
+                'title' => 'Cung oán ngâm khúc',
+                'author' => 'Nguyễn Gia Thiều',
+                'access_level' => BookAccessLevel::Free,
+            ],
+            'dai-viet-su-ky-toan-thu' => [
+                'title' => 'Đại Việt sử ký toàn thư',
+                'author' => 'Ngô Sĩ Liên',
+                'access_level' => BookAccessLevel::Vip,
+            ],
+            'hoang-le-nhat-thong-chi' => [
+                'title' => 'Hoàng Lê nhất thống chí',
+                'author' => 'Ngô gia văn phái',
+                'access_level' => BookAccessLevel::Free,
+            ],
+            'luc-van-tien' => [
+                'title' => 'Lục Vân Tiên',
+                'author' => 'Nguyễn Đình Chiểu',
+                'access_level' => BookAccessLevel::Free,
+            ],
+            'quoc-am-thi-tap' => [
+                'title' => 'Quốc âm thi tập',
+                'author' => 'Nguyễn Trãi',
+                'access_level' => BookAccessLevel::Free,
+            ],
+            'truyen-kieu' => [
+                'title' => 'Truyện Kiều',
+                'author' => 'Nguyễn Du',
+                'access_level' => BookAccessLevel::Free,
+            ],
+            'vu-trung-tuy-but' => [
+                'title' => 'Vũ trung tùy bút',
+                'author' => 'Phạm Đình Hổ',
+                'access_level' => BookAccessLevel::Free,
+            ],
+        ], $catalog);
         $this->assertSame(8, Book::query()->where('status', BookStatus::Published)->count());
         $this->assertSame(1, Book::query()->where('access_level', BookAccessLevel::Vip)->count());
 
