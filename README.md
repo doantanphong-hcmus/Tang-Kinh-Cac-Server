@@ -50,9 +50,18 @@ Set `DB_PASSWORD` in both `.env` and `.env.testing` to the local role password. 
 Create the development schema and start the server:
 
 ```powershell
-php artisan migrate
+php artisan migrate --seed
 php artisan serve --host=0.0.0.0 --port=8000
 ```
+
+The development seeder creates these local-only accounts:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Reader | `reader@example.test` | `password` |
+| Administrator | `admin@example.test` | `password` |
+
+These credentials are intentionally simple and must never be used outside local development.
 
 Local base URLs:
 
