@@ -42,6 +42,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get the authenticated user
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The authenticated user.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUserResponse'
+        '401':
+          description: The access token is missing, invalid, or revoked.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Revoke the current access token
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: The current access token was revoked.
+        '401':
+          description: The access token is missing, invalid, or revoked.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /auth/register:
     post:
       summary: Register a reader account
@@ -150,6 +197,11 @@ paths:
                 data:
                   status: ok
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum token
   headers:
     RequestId:
       description: Server-generated identifier used to correlate a response with logs.
@@ -157,6 +209,13 @@ components:
         type: string
         pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
   schemas:
+    CurrentUserResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
     LoginRequest:
       type: object
       required:
