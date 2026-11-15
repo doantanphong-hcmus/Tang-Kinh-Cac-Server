@@ -38,6 +38,7 @@ final class GenreListTest extends TestCase
         ]);
         $alpha->books()->attach(Book::factory()->published()->create());
         $alpha->books()->attach(Book::factory()->published()->create());
+        $alpha->books()->attach(Book::factory()->published()->vip()->create());
         $alpha->books()->attach(Book::factory()->create());
         $alpha->books()->attach(Book::factory()->archived()->create());
         $inactive->books()->attach(Book::factory()->published()->create());
@@ -53,7 +54,7 @@ final class GenreListTest extends TestCase
                         'id' => $alpha->id,
                         'slug' => 'alpha',
                         'name' => 'Alpha',
-                        'published_book_count' => 2,
+                        'published_book_count' => 3,
                     ],
                     [
                         'id' => $zeta->id,

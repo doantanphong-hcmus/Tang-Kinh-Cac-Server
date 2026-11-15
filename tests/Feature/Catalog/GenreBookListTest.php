@@ -9,6 +9,7 @@ use App\Models\Genre;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 final class GenreBookListTest extends TestCase
@@ -82,15 +83,34 @@ final class GenreBookListTest extends TestCase
             ->assertJsonPath('error.code', 'NOT_FOUND');
     }
 
-    public function test_rejects_page_size_above_limit(): void
+    #[DataProvider('invalidPagination')]
+    public function test_rejects_invalid_pagination(string $query, string $field, string $message): void
     {
         $genre = Genre::factory()->create();
         $this->authenticate();
 
-        $this->getJson("/api/v1/genres/{$genre->slug}/books?per_page=51")
+        $this->getJson("/api/v1/genres/{$genre->slug}/books?{$query}")
             ->assertUnprocessable()
             ->assertJsonPath('error.code', 'VALIDATION_ERROR')
-            ->assertJsonPath('error.fields.per_page.0', 'The per page field must be between 1 and 50.');
+            ->assertJsonPath("error.fields.{$field}.0", $message);
+    }
+
+    /**
+     * @return array<string, array{string, string, string}>
+     */
+    public static function invalidPagination(): array
+    {
+        return [
+            'page must be an integer' => ['page=second', 'page', 'The page field must be an integer.'],
+            'page below one' => ['page=0', 'page', 'The page field must be at least 1.'],
+            'page size must be an integer' => [
+                'per_page=many',
+                'per_page',
+                'The per page field must be an integer.',
+            ],
+            'page size below limit' => ['per_page=0', 'per_page', 'The per page field must be between 1 and 50.'],
+            'page size above limit' => ['per_page=51', 'per_page', 'The per page field must be between 1 and 50.'],
+        ];
     }
 
     private function authenticate(): void

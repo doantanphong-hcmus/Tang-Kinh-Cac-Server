@@ -82,6 +82,19 @@ final class BookListTest extends TestCase
             ->assertJsonPath('data.0.id', $matchingBook->id);
     }
 
+    public function test_country_filter_treats_sql_wildcards_as_literal_text(): void
+    {
+        Book::factory()->published()->create(['country' => 'Vietnam']);
+        Book::factory()->published()->create(['country' => 'France']);
+        $this->authenticate();
+
+        $response = $this->getJson('/api/v1/books?country=%25');
+
+        $response
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
     #[DataProvider('sortOrders')]
     public function test_sorts_books_deterministically(string $sort, array $expectedTitles): void
     {
@@ -132,6 +145,23 @@ final class BookListTest extends TestCase
             ->assertJsonPath('meta.last_page', 2);
     }
 
+    public function test_newest_pagination_uses_id_as_stable_tie_breaker(): void
+    {
+        $firstBook = Book::factory()->published()->create([
+            'published_at' => '2026-01-01 00:00:00',
+        ]);
+        Book::factory()->published()->create([
+            'published_at' => '2026-01-01 00:00:00',
+        ]);
+        $this->authenticate();
+
+        $response = $this->getJson('/api/v1/books?sort=newest&per_page=1&page=2');
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $firstBook->id);
+    }
+
     #[DataProvider('invalidFilters')]
     public function test_rejects_invalid_filter_values(string $query, string $field, string $message): void
     {
@@ -163,7 +193,32 @@ final class BookListTest extends TestCase
     public static function invalidFilters(): array
     {
         return [
+            'search must be a string' => ['q[]=term', 'q', 'The q field must be a string.'],
+            'search above length limit' => [
+                'q='.str_repeat('a', 201),
+                'q',
+                'The q field must not be greater than 200 characters.',
+            ],
+            'genre must be a string' => ['genre[]=classics', 'genre', 'The genre field must be a string.'],
+            'genre above length limit' => [
+                'genre='.str_repeat('a', 256),
+                'genre',
+                'The genre field must not be greater than 255 characters.',
+            ],
+            'country must be a string' => ['country[]=Vietnam', 'country', 'The country field must be a string.'],
+            'country above length limit' => [
+                'country='.str_repeat('a', 101),
+                'country',
+                'The country field must not be greater than 100 characters.',
+            ],
+            'page must be an integer' => ['page=second', 'page', 'The page field must be an integer.'],
             'page below one' => ['page=0', 'page', 'The page field must be at least 1.'],
+            'page size must be an integer' => [
+                'per_page=many',
+                'per_page',
+                'The per page field must be an integer.',
+            ],
+            'page size below limit' => ['per_page=0', 'per_page', 'The per page field must be between 1 and 50.'],
             'page size above limit' => ['per_page=51', 'per_page', 'The per page field must be between 1 and 50.'],
             'unknown access level' => ['access_level=premium', 'access_level', 'The selected access level is invalid.'],
             'untrusted sort value' => ['sort=title%20desc', 'sort', 'The selected sort is invalid.'],
