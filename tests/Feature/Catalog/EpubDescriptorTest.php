@@ -53,6 +53,8 @@ final class EpubDescriptorTest extends TestCase
 
         $downloadUrl = $response->json('data.download_url');
         $this->assertIsString($downloadUrl);
+        parse_str((string) parse_url($downloadUrl, PHP_URL_QUERY), $downloadQuery);
+        $this->assertSame('1794744300', $downloadQuery['expires'] ?? null);
         $this->assertTrue(URL::hasValidSignature(Request::create($downloadUrl)));
         $this->assertStringNotContainsString($file->storage_disk, parse_url($downloadUrl, PHP_URL_QUERY) ?: '');
         $this->assertStringNotContainsString($file->storage_path, $response->getContent());

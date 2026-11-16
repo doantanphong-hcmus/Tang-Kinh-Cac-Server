@@ -544,6 +544,7 @@ paths:
         - EPUB
       summary: Download an EPUB through a temporary signed URL
       operationId: downloadEpub
+      security: []
       parameters:
         - name: file
           in: path
@@ -592,7 +593,7 @@ paths:
                 type: string
                 format: binary
         '403':
-          description: The signed URL is missing, modified, or expired.
+          description: The signed URL is missing, modified, or expired; request a fresh descriptor before retrying.
           headers:
             X-Request-ID:
               $ref: '#/components/headers/RequestId'
@@ -869,15 +870,19 @@ components:
           type: integer
           format: int64
           minimum: 1
+          description: Expected byte count of the completed download.
         checksum_sha256:
           type: string
           pattern: '^[0-9a-f]{64}$'
+          description: Lowercase SHA-256 digest Android must verify before promoting its temporary file.
         download_url:
           type: string
           format: uri
+          description: Opaque absolute signed URL; use unchanged and replace it after expiry.
         expires_at:
           type: string
           format: date-time
+          description: UTC expiry of download_url; fetch a new descriptor after this instant.
     BookDetail:
       allOf:
         - $ref: '#/components/schemas/BookSummary'

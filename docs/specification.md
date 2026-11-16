@@ -858,5 +858,18 @@ responses expose `current_page`, `per_page`, `total`, and `last_page`. Path para
 identifier or a unique slug. The data layer maps these transport DTOs into Android domain models; UI code must not
 depend directly on JSON field names or error envelopes.
 
+The `BookContentGateway` transport mapping is:
+
+| Gateway method | HTTP operation | Success DTO |
+| --- | --- | --- |
+| `getEpubDescriptor` | `GET /api/v1/books/{book}/epub` | `EpubDescriptorResponse` |
+| Download URL from descriptor | `GET /api/v1/media/{file}/download?...` | Streamed EPUB bytes |
+
+Android must treat `download_url` as an opaque, short-lived, absolute URL. It streams the response into a temporary
+file in app-private storage while calculating SHA-256, then promotes the file only when its byte count matches `size`
+and its lowercase digest matches `checksum_sha256`. A `403 INVALID_MEDIA_SIGNATURE` means the app must discard any
+partial file and request a fresh descriptor; it must never edit or reuse the signed query parameters. Cached content is
+identified by `file_id`, `version`, and `checksum_sha256`. EPUB files must not be written to shared or public storage.
+
 Retrofit DTOs, HTTP responses, and transport errors must be mapped inside Android data-layer implementations. The
 server must not require Android UI code to understand Laravel, Sanctum, PostgreSQL, or the selected storage provider.
