@@ -20,6 +20,8 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property BookAccessLevel $access_level
+ * @property int $active_audio_track_count
+ * @property int|string|null $active_audio_total_duration_seconds
  * @property string $average_rating
  * @property Carbon|null $published_at
  * @property BookStatus $status

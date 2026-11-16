@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\AudiobookDescriptorController;
 use App\Http\Controllers\Api\V1\BookController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\EpubDescriptorController;
@@ -31,6 +32,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/auth/me', CurrentUserController::class)->name('auth.me');
     Route::post('/auth/logout', LogoutController::class)->name('auth.logout');
     Route::get('/books', [BookController::class, 'index'])->name('books.index');
+    Route::get('/books/{book}/audiobook', AudiobookDescriptorController::class)
+        ->name('books.audiobook.show');
     Route::get('/books/{book}/epub', EpubDescriptorController::class)->name('books.epub.show');
     Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
     Route::get('/genres', [GenreController::class, 'index'])->name('genres.index');

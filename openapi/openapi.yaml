@@ -538,6 +538,89 @@ paths:
                       code: EPUB_NOT_FOUND
                       message: No EPUB is available for this book.
                       request_id: 01JD0EXAMPLE00000000000000
+  /books/{book}/audiobook:
+    get:
+      tags:
+        - Audiobook
+      summary: Get an authorized audiobook descriptor
+      operationId: getAudiobookDescriptor
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: book
+          in: path
+          required: true
+          description: Numeric book identifier or unique slug.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active audiobook availability and aggregate track metadata.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AudiobookDescriptorResponse'
+              example:
+                data:
+                  book_id: 1
+                  title: Truyện Kiều
+                  cover_url: null
+                  total_duration_seconds: 7200
+                  track_count: 6
+                  available: true
+        '401':
+          description: The access token is missing, invalid, or revoked.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: UNAUTHENTICATED
+                  message: Authentication is required.
+                  request_id: 01JD0EXAMPLE00000000000000
+        '403':
+          description: The authenticated account cannot access VIP content.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: CONTENT_ACCESS_DENIED
+                  message: Your account cannot access this content.
+                  request_id: 01JD0EXAMPLE00000000000000
+        '404':
+          description: The book is unavailable or has no active audio tracks.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                bookNotFound:
+                  value:
+                    error:
+                      code: BOOK_NOT_FOUND
+                      message: The requested book was not found.
+                      request_id: 01JD0EXAMPLE00000000000000
+                audiobookNotFound:
+                  value:
+                    error:
+                      code: AUDIOBOOK_NOT_FOUND
+                      message: No audiobook is available for this book.
+                      request_id: 01JD0EXAMPLE00000000000000
   /media/{file}/download:
     get:
       tags:
@@ -883,6 +966,40 @@ components:
           type: string
           format: date-time
           description: UTC expiry of download_url; fetch a new descriptor after this instant.
+    AudiobookDescriptorResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/AudiobookDescriptor'
+    AudiobookDescriptor:
+      type: object
+      required:
+        - book_id
+        - title
+        - cover_url
+        - total_duration_seconds
+        - track_count
+        - available
+      properties:
+        book_id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        cover_url:
+          type: string
+          format: uri
+          nullable: true
+        total_duration_seconds:
+          type: integer
+          minimum: 0
+        track_count:
+          type: integer
+          minimum: 1
+        available:
+          type: boolean
     BookDetail:
       allOf:
         - $ref: '#/components/schemas/BookSummary'

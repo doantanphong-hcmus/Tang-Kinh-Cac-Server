@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Responses;
 
+use App\Exceptions\AudiobookNotFound;
 use App\Exceptions\BookNotFound;
 use App\Exceptions\ContentAccessDenied;
 use App\Exceptions\EpubNotFound;
@@ -72,6 +73,10 @@ final class ApiErrorResponse
 
         if ($exception instanceof EpubNotFound) {
             return self::make($request, 'EPUB_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof AudiobookNotFound) {
+            return self::make($request, 'AUDIOBOOK_NOT_FOUND', $exception->getMessage(), 404);
         }
 
         $status = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : 500;

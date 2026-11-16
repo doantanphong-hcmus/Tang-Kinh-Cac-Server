@@ -25,6 +25,7 @@ final class CatalogAuthenticationTest extends TestCase
     public static function catalogEndpoints(): array
     {
         return [
+            'audiobook descriptor' => ['/api/v1/books/missing-book/audiobook'],
             'book list' => ['/api/v1/books'],
             'book detail' => ['/api/v1/books/missing-book'],
             'genre list' => ['/api/v1/genres'],
