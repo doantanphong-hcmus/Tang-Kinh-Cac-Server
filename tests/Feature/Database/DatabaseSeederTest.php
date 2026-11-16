@@ -7,11 +7,14 @@ namespace Tests\Feature\Database;
 use App\BookAccessLevel;
 use App\BookStatus;
 use App\Models\Book;
+use App\Models\BookFile;
 use App\Models\User;
 use App\UserRole;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 final class DatabaseSeederTest extends TestCase
@@ -20,6 +23,8 @@ final class DatabaseSeederTest extends TestCase
 
     public function test_it_seeds_development_accounts_and_catalog(): void
     {
+        Storage::fake('media');
+
         $this->seed();
 
         $reader = User::query()->where('email', 'reader@example.test')->sole();
@@ -93,10 +98,19 @@ final class DatabaseSeederTest extends TestCase
         $this->assertTrue($books->every(fn (Book $book): bool => $book->genres->isNotEmpty()));
         $this->assertTrue($books->every(fn (Book $book): bool => $book->keywords->isNotEmpty()));
         $this->assertSame(1, Book::search('TRUYEN KIEU')->count());
+
+        $epub = BookFile::query()->where('type', 'epub')->sole();
+        $sample = File::get(database_path('seeders/media/tang-kinh-cac-sample.epub'));
+        $this->assertSame(strlen($sample), $epub->size);
+        $this->assertSame(hash('sha256', $sample), $epub->checksum_sha256);
+        $this->assertTrue($epub->is_active);
+        Storage::disk('media')->assertExists($epub->storage_path);
     }
 
     public function test_it_can_run_more_than_once_without_duplicate_records(): void
     {
+        Storage::fake('media');
+
         $this->seed();
         $firstCounts = $this->seededRecordCounts();
 
@@ -118,6 +132,7 @@ final class DatabaseSeederTest extends TestCase
             'book_genre' => DB::table('book_genre')->count(),
             'book_alternative_titles' => DB::table('book_alternative_titles')->count(),
             'book_keywords' => DB::table('book_keywords')->count(),
+            'book_files' => DB::table('book_files')->count(),
         ];
     }
 }
