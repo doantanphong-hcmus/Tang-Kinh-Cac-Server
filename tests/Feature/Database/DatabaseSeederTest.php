@@ -105,6 +105,21 @@ final class DatabaseSeederTest extends TestCase
         $this->assertSame(hash('sha256', $sample), $epub->checksum_sha256);
         $this->assertTrue($epub->is_active);
         Storage::disk('media')->assertExists($epub->storage_path);
+
+        $audioTracks = BookFile::query()
+            ->where('type', 'audio')
+            ->orderBy('sort_order')
+            ->get();
+        $this->assertSame(['Sample Track 1', 'Sample Track 2'], $audioTracks->pluck('title')->all());
+        $this->assertSame([1, 2], $audioTracks->pluck('sort_order')->all());
+
+        foreach ($audioTracks as $audioTrack) {
+            $audio = Storage::disk('media')->get($audioTrack->storage_path);
+            $this->assertStringStartsWith('RIFF', $audio);
+            $this->assertSame('WAVE', substr($audio, 8, 4));
+            $this->assertSame(strlen($audio), $audioTrack->size);
+            $this->assertSame(hash('sha256', $audio), $audioTrack->checksum_sha256);
+        }
     }
 
     public function test_it_can_run_more_than_once_without_duplicate_records(): void
