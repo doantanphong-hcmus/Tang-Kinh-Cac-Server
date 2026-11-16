@@ -26,6 +26,7 @@ final class CatalogAuthenticationTest extends TestCase
     {
         return [
             'audiobook descriptor' => ['/api/v1/books/missing-book/audiobook'],
+            'audio track list' => ['/api/v1/books/missing-book/audio-tracks'],
             'book list' => ['/api/v1/books'],
             'book detail' => ['/api/v1/books/missing-book'],
             'genre list' => ['/api/v1/genres'],

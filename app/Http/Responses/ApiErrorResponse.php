@@ -41,7 +41,7 @@ final class ApiErrorResponse
             return self::make($request, 'UNAUTHENTICATED', 'Authentication is required.', 401);
         }
 
-        if ($exception instanceof InvalidSignatureException && $request->routeIs('media.*')) {
+        if ($exception instanceof InvalidSignatureException && $request->routeIs('media.*', 'audio-tracks.*')) {
             return self::make(
                 $request,
                 'INVALID_MEDIA_SIGNATURE',

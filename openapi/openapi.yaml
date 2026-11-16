@@ -621,6 +621,92 @@ paths:
                       code: AUDIOBOOK_NOT_FOUND
                       message: No audiobook is available for this book.
                       request_id: 01JD0EXAMPLE00000000000000
+  /books/{book}/audio-tracks:
+    get:
+      tags:
+        - Audiobook
+      summary: List authorized audiobook tracks
+      operationId: listAudioTracks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: book
+          in: path
+          required: true
+          description: Numeric book identifier or unique slug.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active audio tracks in playback order with short-lived signed stream URLs.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AudioTrackCollectionResponse'
+              example:
+                data:
+                  - id: 21
+                    title: Chapter 1
+                    sort_order: 1
+                    duration_seconds: 1240
+                    mime_type: audio/mpeg
+                    size: 18200000
+                    checksum_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    stream_url: https://example.test/api/v1/audio-tracks/21/stream?expires=1794830700&signature=example
+                    expires_at: '2026-11-16T12:05:00Z'
+        '401':
+          description: The access token is missing, invalid, or revoked.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: UNAUTHENTICATED
+                  message: Authentication is required.
+                  request_id: 01JD0EXAMPLE00000000000000
+        '403':
+          description: The authenticated account cannot access VIP content.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: CONTENT_ACCESS_DENIED
+                  message: Your account cannot access this content.
+                  request_id: 01JD0EXAMPLE00000000000000
+        '404':
+          description: The book is unavailable or has no active audio tracks.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                bookNotFound:
+                  value:
+                    error:
+                      code: BOOK_NOT_FOUND
+                      message: The requested book was not found.
+                      request_id: 01JD0EXAMPLE00000000000000
+                audiobookNotFound:
+                  value:
+                    error:
+                      code: AUDIOBOOK_NOT_FOUND
+                      message: No audiobook is available for this book.
+                      request_id: 01JD0EXAMPLE00000000000000
   /media/{file}/download:
     get:
       tags:
@@ -1000,6 +1086,57 @@ components:
           minimum: 1
         available:
           type: boolean
+    AudioTrackCollectionResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AudioTrack'
+    AudioTrack:
+      type: object
+      required:
+        - id
+        - title
+        - sort_order
+        - duration_seconds
+        - mime_type
+        - size
+        - checksum_sha256
+        - stream_url
+        - expires_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        sort_order:
+          type: integer
+          minimum: 0
+        duration_seconds:
+          type: integer
+          minimum: 0
+        mime_type:
+          type: string
+          pattern: '^audio/'
+        size:
+          type: integer
+          format: int64
+          minimum: 1
+        checksum_sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        stream_url:
+          type: string
+          format: uri
+          description: Opaque absolute signed URL; use unchanged and replace it after expiry.
+        expires_at:
+          type: string
+          format: date-time
+          description: UTC expiry of stream_url; fetch a new track list after this instant.
     BookDetail:
       allOf:
         - $ref: '#/components/schemas/BookSummary'

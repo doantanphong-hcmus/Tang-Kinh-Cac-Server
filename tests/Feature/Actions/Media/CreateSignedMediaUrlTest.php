@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Actions\Media;
 
 use App\Actions\Media\CreateSignedMediaUrl;
+use App\BookFileType;
 use App\Models\BookFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
@@ -38,5 +39,21 @@ final class CreateSignedMediaUrlTest extends TestCase
         $modifiedRequest = Request::create(str_replace('/42/download', '/43/download', $url));
 
         $this->assertFalse(URL::hasValidSignature($modifiedRequest));
+    }
+
+    public function test_creates_signed_audio_stream_url(): void
+    {
+        $track = BookFile::factory()->make([
+            'id' => 21,
+            'type' => BookFileType::Audio,
+            'storage_path' => 'private/secret-track.mp3',
+        ]);
+
+        $url = app(CreateSignedMediaUrl::class)->handle($track, now()->addMinutes(5));
+        $request = Request::create($url);
+
+        $this->assertTrue(URL::hasValidSignature($request));
+        $this->assertStringContainsString('/api/v1/audio-tracks/21/stream', $url);
+        $this->assertStringNotContainsString('secret-track.mp3', $url);
     }
 }

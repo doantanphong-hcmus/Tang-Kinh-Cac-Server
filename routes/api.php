@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AudiobookDescriptorController;
+use App\Http\Controllers\Api\V1\AudioTrackController;
+use App\Http\Controllers\Api\V1\AudioTrackStreamController;
 use App\Http\Controllers\Api\V1\BookController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\EpubDescriptorController;
@@ -34,6 +36,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/books', [BookController::class, 'index'])->name('books.index');
     Route::get('/books/{book}/audiobook', AudiobookDescriptorController::class)
         ->name('books.audiobook.show');
+    Route::get('/books/{book}/audio-tracks', AudioTrackController::class)
+        ->name('books.audio-tracks.index');
     Route::get('/books/{book}/epub', EpubDescriptorController::class)->name('books.epub.show');
     Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
     Route::get('/genres', [GenreController::class, 'index'])->name('genres.index');
@@ -43,3 +47,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
 Route::get('/media/{file}/download', MediaDownloadController::class)
     ->middleware('signed')
     ->name('media.download');
+
+Route::get('/audio-tracks/{track}/stream', AudioTrackStreamController::class)
+    ->middleware('signed')
+    ->name('audio-tracks.stream');
