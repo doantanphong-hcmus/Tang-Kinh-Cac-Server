@@ -9,6 +9,7 @@ use App\Exceptions\BookNotFound;
 use App\Exceptions\ContentAccessDenied;
 use App\Exceptions\EpubNotFound;
 use App\Exceptions\InvalidCredentials;
+use App\Exceptions\RangeNotSatisfiable;
 use App\Exceptions\RegistrationConflict;
 use App\Http\Middleware\PrepareApiRequest;
 use Illuminate\Auth\AuthenticationException;
@@ -79,6 +80,16 @@ final class ApiErrorResponse
             return self::make($request, 'AUDIOBOOK_NOT_FOUND', $exception->getMessage(), 404);
         }
 
+        if ($exception instanceof RangeNotSatisfiable) {
+            return self::make(
+                request: $request,
+                code: 'RANGE_NOT_SATISFIABLE',
+                message: $exception->getMessage(),
+                status: 416,
+                headers: ['Content-Range' => "bytes */{$exception->fileSize}"],
+            );
+        }
+
         $status = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : 500;
         [$code, $message] = self::errorForStatus($status);
         $headers = $exception instanceof HttpExceptionInterface ? $exception->getHeaders() : [];
@@ -134,6 +145,7 @@ final class ApiErrorResponse
             406 => ['NOT_ACCEPTABLE', 'The requested response format is not supported.'],
             409 => ['CONFLICT', 'The request conflicts with the current resource state.'],
             415 => ['UNSUPPORTED_MEDIA_TYPE', 'The request content type is not supported.'],
+            416 => ['RANGE_NOT_SATISFIABLE', 'The requested byte range cannot be satisfied.'],
             422 => ['UNPROCESSABLE_CONTENT', 'The request could not be processed.'],
             429 => ['TOO_MANY_REQUESTS', 'Too many requests were made.'],
             500 => ['INTERNAL_SERVER_ERROR', 'An unexpected server error occurred.'],

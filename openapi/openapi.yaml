@@ -789,6 +789,152 @@ paths:
                   code: EPUB_NOT_FOUND
                   message: No EPUB is available for this book.
                   request_id: 01JD0EXAMPLE00000000000000
+  /audio-tracks/{track}/stream:
+    get:
+      tags:
+        - Audiobook
+      summary: Stream a complete audio track or a single byte range
+      operationId: streamAudioTrack
+      security: []
+      parameters:
+        - name: track
+          in: path
+          required: true
+          description: Opaque audio-track identifier from the track list.
+          schema:
+            type: integer
+            format: int64
+        - name: expires
+          in: query
+          required: true
+          description: Unix timestamp included in the signed URL.
+          schema:
+            type: integer
+            format: int64
+        - name: signature
+          in: query
+          required: true
+          description: URL signature covering the path and expiry.
+          schema:
+            type: string
+        - name: Range
+          in: header
+          required: false
+          description: A single RFC 9110 byte range.
+          schema:
+            type: string
+            example: bytes=0-65535
+      responses:
+        '200':
+          description: The complete audio track streamed in bounded chunks.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Accept-Ranges:
+              description: Indicates support for byte-range requests.
+              schema:
+                type: string
+                enum:
+                  - bytes
+            Content-Length:
+              description: Full audio-track size in bytes.
+              schema:
+                type: integer
+                format: int64
+            ETag:
+              description: Quoted SHA-256 checksum stored with the track metadata.
+              schema:
+                type: string
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        '206':
+          description: The requested byte range streamed in bounded chunks.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Accept-Ranges:
+              description: Indicates support for byte-range requests.
+              schema:
+                type: string
+                enum:
+                  - bytes
+            Content-Length:
+              description: Number of bytes in this partial response.
+              schema:
+                type: integer
+                format: int64
+            Content-Range:
+              description: Inclusive byte boundaries and complete file size.
+              schema:
+                type: string
+                example: bytes 0-65535/18200000
+            ETag:
+              description: Quoted SHA-256 checksum stored with the track metadata.
+              schema:
+                type: string
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: The signature is invalid or expired, or the content is VIP-only.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidSignature:
+                  value:
+                    error:
+                      code: INVALID_MEDIA_SIGNATURE
+                      message: The media signature is invalid or has expired.
+                      request_id: 01JD0EXAMPLE00000000000000
+                contentAccessDenied:
+                  value:
+                    error:
+                      code: CONTENT_ACCESS_DENIED
+                      message: Your account cannot access this content.
+                      request_id: 01JD0EXAMPLE00000000000000
+        '404':
+          description: The signed identifier no longer resolves to an active published audio track.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: AUDIOBOOK_NOT_FOUND
+                  message: No audiobook is available for this book.
+                  request_id: 01JD0EXAMPLE00000000000000
+        '416':
+          description: The Range header is malformed, unsupported, or outside the file boundary.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Content-Range:
+              description: Complete file size for an unsatisfied range.
+              schema:
+                type: string
+                example: bytes */18200000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: RANGE_NOT_SATISFIABLE
+                  message: The requested byte range cannot be satisfied.
+                  request_id: 01JD0EXAMPLE00000000000000
   /genres:
     get:
       tags:
