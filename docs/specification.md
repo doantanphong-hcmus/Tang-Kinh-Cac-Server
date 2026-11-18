@@ -871,5 +871,20 @@ and its lowercase digest matches `checksum_sha256`. A `403 INVALID_MEDIA_SIGNATU
 partial file and request a fresh descriptor; it must never edit or reuse the signed query parameters. Cached content is
 identified by `file_id`, `version`, and `checksum_sha256`. EPUB files must not be written to shared or public storage.
 
+The `AudiobookGateway` transport mapping is:
+
+| Gateway method | HTTP operation | Success DTO |
+| --- | --- | --- |
+| `getAudiobook` | `GET /api/v1/books/{book}/audiobook` | `AudiobookDescriptorResponse` |
+| `getAudioTracks` | `GET /api/v1/books/{book}/audio-tracks` | `AudioTrackCollectionResponse` |
+| Stream URL from a track | `GET /api/v1/audio-tracks/{track}/stream?...` | Streamed audio bytes |
+
+Android must treat `stream_url` as an opaque, short-lived, absolute Media3 URI. Media3's OkHttp data source sends
+single open-ended byte ranges such as `Range: bytes=65536-` with `Accept-Encoding: identity`; the server returns exact
+bytes with `206`, `Accept-Ranges: bytes`, `Content-Length`, and `Content-Range`. A request beginning exactly at the
+complete file size receives `416` with `Content-Range: bytes */{size}`, which Media3 recognizes as end of input. After
+`expires_at`, or after `403 INVALID_MEDIA_SIGNATURE`, Android must fetch a fresh track list instead of editing or
+reusing the signed query parameters. Track MIME type comes from `mime_type`; playback code must not assume MP3.
+
 Retrofit DTOs, HTTP responses, and transport errors must be mapped inside Android data-layer implementations. The
 server must not require Android UI code to understand Laravel, Sanctum, PostgreSQL, or the selected storage provider.

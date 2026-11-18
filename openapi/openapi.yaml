@@ -627,6 +627,10 @@ paths:
         - Audiobook
       summary: List authorized audiobook tracks
       operationId: listAudioTracks
+      description: >-
+        Returns active tracks in ascending playback order. Each stream_url is an opaque absolute URL shared by
+        Media3/OkHttp without modification; request this operation again when expires_at passes or streaming returns
+        403 INVALID_MEDIA_SIGNATURE.
       security:
         - bearerAuth: []
       parameters:
@@ -820,13 +824,15 @@ paths:
         - name: Range
           in: header
           required: false
-          description: A single RFC 9110 byte range.
+          description: >-
+            A single RFC 9110 byte range. Media3 OkHttpDataSource seeking uses an open-ended value such as
+            bytes=65536- and sends Accept-Encoding: identity.
           schema:
             type: string
             example: bytes=0-65535
       responses:
         '200':
-          description: The complete audio track streamed in bounded chunks.
+          description: The complete audio track streamed in bounded chunks when Range is absent.
           headers:
             X-Request-ID:
               $ref: '#/components/headers/RequestId'
@@ -846,12 +852,12 @@ paths:
               schema:
                 type: string
           content:
-            audio/mpeg:
+            audio/*:
               schema:
                 type: string
                 format: binary
         '206':
-          description: The requested byte range streamed in bounded chunks.
+          description: The requested byte range streamed in bounded chunks for OkHttp/Media3 seeking.
           headers:
             X-Request-ID:
               $ref: '#/components/headers/RequestId'
@@ -876,7 +882,7 @@ paths:
               schema:
                 type: string
           content:
-            audio/mpeg:
+            audio/*:
               schema:
                 type: string
                 format: binary
@@ -917,7 +923,9 @@ paths:
                   message: No audiobook is available for this book.
                   request_id: 01JD0EXAMPLE00000000000000
         '416':
-          description: The Range header is malformed, unsupported, or outside the file boundary.
+          description: >-
+            The Range header is malformed, unsupported, or outside the file boundary. Media3 treats a request whose
+            starting offset equals the complete size in Content-Range as a successful end-of-input condition.
           headers:
             X-Request-ID:
               $ref: '#/components/headers/RequestId'
@@ -1278,7 +1286,9 @@ components:
         stream_url:
           type: string
           format: uri
-          description: Opaque absolute signed URL; use unchanged and replace it after expiry.
+          description: >-
+            Opaque absolute signed URL for the Media3 media item; use unchanged and refresh the track list after
+            expiry or 403 INVALID_MEDIA_SIGNATURE.
         expires_at:
           type: string
           format: date-time

@@ -41,4 +41,29 @@ final class AudioSeedTest extends TestCase
                 ->assertStreamedContent($bytes);
         }
     }
+
+    public function test_seeded_track_supports_open_ended_seek_request_used_by_media3_okhttp(): void
+    {
+        Storage::fake('media');
+        $this->seed();
+        Sanctum::actingAs(User::query()->where('email', 'reader@example.test')->sole());
+        $trackResponse = $this->getJson('/api/v1/books/truyen-kieu/audio-tracks')->assertOk();
+        $trackId = $trackResponse->json('data.1.id');
+        $streamUrl = $trackResponse->json('data.1.stream_url');
+        $this->assertIsInt($trackId);
+        $this->assertIsString($streamUrl);
+        $track = BookFile::query()->findOrFail($trackId);
+        $bytes = Storage::disk('media')->get($track->storage_path);
+
+        $this->withHeaders([
+            'Accept-Encoding' => 'identity',
+            'Range' => 'bytes=44-',
+        ])->get($streamUrl)
+            ->assertStatus(206)
+            ->assertHeader('Accept-Ranges', 'bytes')
+            ->assertHeader('Content-Length', '8000')
+            ->assertHeader('Content-Range', 'bytes 44-8043/8044')
+            ->assertHeader('Content-Type', 'audio/wav')
+            ->assertStreamedContent(substr($bytes, 44));
+    }
 }
