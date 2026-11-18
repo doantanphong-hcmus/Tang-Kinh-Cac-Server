@@ -129,6 +129,27 @@ class CatalogMigrationTest extends TestCase
         $this->assertDatabaseHas('books', ['id' => $catalog['book_id']]);
     }
 
+    public function test_catalog_and_media_queries_have_supporting_indexes(): void
+    {
+        $indexes = DB::table('pg_indexes')
+            ->where('schemaname', 'public')
+            ->whereIn('tablename', ['books', 'book_files'])
+            ->pluck('indexname')
+            ->all();
+
+        foreach ([
+            'books_status_index',
+            'books_title_index',
+            'books_country_index',
+            'books_access_level_index',
+            'books_published_at_index',
+            'book_files_book_id_type_is_active_sort_order_index',
+            'book_files_storage_path_unique',
+        ] as $index) {
+            $this->assertContains($index, $indexes);
+        }
+    }
+
     /**
      * @return array<string, array{string, string}>
      */

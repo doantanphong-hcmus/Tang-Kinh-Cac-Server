@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Media;
 
+use App\Actions\Media\OpenBookFileStream;
+use App\Actions\Media\ResolveByteRange;
+use App\Http\Controllers\Api\V1\AudioTrackStreamController;
 use App\Models\Book;
 use App\Models\BookFile;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -130,6 +134,56 @@ final class AudioTrackStreamTest extends TestCase
         $this->getJson($url)
             ->assertForbidden()
             ->assertJsonPath('error.code', 'CONTENT_ACCESS_DENIED');
+    }
+
+    public function test_large_audio_stream_has_bounded_memory_growth(): void
+    {
+        Storage::fake('media');
+        $size = 16 * 1_024 * 1_024;
+        $storagePath = 'audio/large-track.mp3';
+        Storage::disk('media')->makeDirectory('audio');
+        $path = Storage::disk('media')->path($storagePath);
+        $handle = fopen($path, 'wb');
+        $chunk = str_repeat('x', 65_536);
+
+        $this->assertIsResource($handle);
+
+        for ($written = 0; $written < $size; $written += strlen($chunk)) {
+            fwrite($handle, $chunk);
+        }
+
+        fclose($handle);
+        $book = Book::factory()->published()->create();
+        $track = BookFile::factory()->audio()->for($book)->create([
+            'storage_path' => $storagePath,
+            'size' => $size,
+            'checksum_sha256' => hash_file('sha256', $path),
+        ]);
+        $response = app(AudioTrackStreamController::class)(
+            Request::create("/api/v1/audio-tracks/{$track->id}/stream"),
+            (string) $track->id,
+            app(ResolveByteRange::class),
+            app(OpenBookFileStream::class),
+        );
+        $streamedBytes = 0;
+        ob_start(function (string $buffer) use (&$streamedBytes): string {
+            $streamedBytes += strlen($buffer);
+
+            return '';
+        }, 65_536);
+        memory_reset_peak_usage();
+        $baselineMemory = memory_get_usage(true);
+
+        try {
+            $response->sendContent();
+        } finally {
+            ob_end_flush();
+        }
+
+        $memoryGrowth = memory_get_peak_usage(true) - $baselineMemory;
+
+        $this->assertSame($size, $streamedBytes);
+        $this->assertLessThan(4 * 1_024 * 1_024, $memoryGrowth);
     }
 
     /**

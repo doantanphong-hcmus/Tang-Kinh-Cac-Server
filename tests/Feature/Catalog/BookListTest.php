@@ -180,6 +180,25 @@ final class BookListTest extends TestCase
             ->assertJsonPath('data.0.id', $firstBook->id);
     }
 
+    public function test_full_catalog_page_has_bounded_queries_and_response_time(): void
+    {
+        Book::factory()->published()->count(50)->create();
+        $this->authenticate();
+        $this->expectsDatabaseQueryCount(3);
+
+        $startedAt = hrtime(true);
+        $response = $this->getJson('/api/v1/books?per_page=50');
+        $elapsedMilliseconds = (hrtime(true) - $startedAt) / 1_000_000;
+
+        $response
+            ->assertOk()
+            ->assertJsonCount(50, 'data')
+            ->assertJsonPath('meta.per_page', 50);
+
+        // This generous ceiling catches accidental unbounded work without pretending to be a load benchmark.
+        $this->assertLessThan(2_000, $elapsedMilliseconds);
+    }
+
     #[DataProvider('invalidFilters')]
     public function test_rejects_invalid_filter_values(string $query, string $field, string $message): void
     {
