@@ -45,6 +45,7 @@ final class GenreController extends Controller
         $genreModel = $genreQuery->firstOrFail();
         $books = $genreModel->books()
             ->visibleToReaders()
+            ->withContentAvailability()
             ->with('author')
             ->orderBy('books.title')
             ->orderBy('books.id')

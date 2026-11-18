@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Catalog;
 
 use App\Models\Book;
+use App\Models\BookFile;
 use App\Models\Genre;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -62,6 +63,21 @@ final class GenreBookListTest extends TestCase
         $this->getJson("/api/v1/genres/{$genre->id}/books")
             ->assertOk()
             ->assertJsonPath('data.0.id', $book->id);
+    }
+
+    public function test_reports_active_content_availability_for_genre_books(): void
+    {
+        $genre = Genre::factory()->create();
+        $book = Book::factory()->published()->create();
+        $genre->books()->attach($book);
+        BookFile::factory()->for($book)->create();
+        BookFile::factory()->audio()->for($book)->create();
+        $this->authenticate();
+
+        $this->getJson("/api/v1/genres/{$genre->slug}/books")
+            ->assertOk()
+            ->assertJsonPath('data.0.has_epub', true)
+            ->assertJsonPath('data.0.has_audiobook', true);
     }
 
     public function test_returns_404_for_missing_genre(): void
