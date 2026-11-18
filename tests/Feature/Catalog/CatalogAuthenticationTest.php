@@ -29,6 +29,7 @@ final class CatalogAuthenticationTest extends TestCase
             'audio track list' => ['/api/v1/books/missing-book/audio-tracks'],
             'book list' => ['/api/v1/books'],
             'book detail' => ['/api/v1/books/missing-book'],
+            'EPUB descriptor' => ['/api/v1/books/missing-book/epub'],
             'genre list' => ['/api/v1/genres'],
             'genre books' => ['/api/v1/genres/missing-genre/books'],
         ];

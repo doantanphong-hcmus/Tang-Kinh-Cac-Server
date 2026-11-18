@@ -127,4 +127,5 @@ vendor\bin\yaml-lint openapi\openapi.yaml
 - [Architecture decision](docs/laravel_backend_architecture.md)
 - [Implementation plan](docs/implementation_plan.md)
 - [Coding conventions](docs/coding_conventions.md)
+- [Version 1 acceptance evidence](docs/acceptance_evidence.md)
 - [OpenAPI contract](openapi/openapi.yaml)
