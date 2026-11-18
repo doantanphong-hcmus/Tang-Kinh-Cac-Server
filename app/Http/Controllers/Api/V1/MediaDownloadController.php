@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Media\OpenBookFileStream;
+use App\BookAccessLevel;
 use App\BookFileType;
 use App\BookStatus;
+use App\Exceptions\ContentAccessDenied;
 use App\Exceptions\EpubNotFound;
 use App\Http\Controllers\Controller;
 use App\Models\BookFile;
@@ -32,6 +34,10 @@ final class MediaDownloadController extends Controller
 
         if ($bookFile === null) {
             throw new EpubNotFound;
+        }
+
+        if ($bookFile->book->access_level === BookAccessLevel::Vip) {
+            throw new ContentAccessDenied;
         }
 
         $stream = $openBookFileStream->handle($bookFile);

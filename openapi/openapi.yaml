@@ -794,7 +794,7 @@ paths:
                 type: string
                 format: binary
         '403':
-          description: The signed URL is missing, modified, or expired; request a fresh descriptor before retrying.
+          description: The signed URL is invalid or expired, or the book has become VIP-only.
           headers:
             X-Request-ID:
               $ref: '#/components/headers/RequestId'
@@ -802,11 +802,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error:
-                  code: INVALID_MEDIA_SIGNATURE
-                  message: The media signature is invalid or has expired.
-                  request_id: 01JD0EXAMPLE00000000000000
+              examples:
+                invalidSignature:
+                  value:
+                    error:
+                      code: INVALID_MEDIA_SIGNATURE
+                      message: The media signature is invalid or has expired.
+                      request_id: 01JD0EXAMPLE00000000000000
+                contentAccessDenied:
+                  value:
+                    error:
+                      code: CONTENT_ACCESS_DENIED
+                      message: Your account cannot access this content.
+                      request_id: 01JD0EXAMPLE00000000000000
         '404':
           description: The signed identifier no longer resolves to an active EPUB.
           headers:

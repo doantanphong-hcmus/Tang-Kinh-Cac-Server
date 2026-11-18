@@ -6,20 +6,20 @@ namespace App\Actions\Auth;
 
 use App\Exceptions\InvalidCredentials;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class IssueAccessToken
 {
     /**
      * @return array{user: User, token: string}
      */
-    public function handle(string $email, string $password, string $deviceName): array
+    public function handle(string $email, #[\SensitiveParameter] string $password, string $deviceName): array
     {
-        $user = User::query()->where('email', $email)->first();
-
-        if ($user === null || ! Hash::check($password, $user->password)) {
+        if (! Auth::validate(['email' => $email, 'password' => $password])) {
             throw new InvalidCredentials;
         }
+
+        $user = User::query()->where('email', $email)->first() ?? throw new InvalidCredentials;
 
         return [
             'user' => $user,

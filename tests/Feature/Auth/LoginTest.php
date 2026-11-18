@@ -6,6 +6,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Sleep;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
@@ -74,6 +75,8 @@ class LoginTest extends TestCase
 
     public function test_returns_401_with_same_generic_error_for_unknown_email(): void
     {
+        Sleep::fake();
+
         $response = $this->postJson('/api/v1/auth/login', [
             'email' => 'missing@example.com',
             'password' => 'wrong-password',
@@ -87,6 +90,7 @@ class LoginTest extends TestCase
             ->assertJsonStructure(['error' => ['code', 'message', 'request_id']]);
         $this->assertStringNotContainsString('wrong-password', $response->getContent());
         $this->assertDatabaseCount('personal_access_tokens', 0);
+        Sleep::assertSleptTimes(1);
     }
 
     public function test_returns_422_for_invalid_login_fields(): void

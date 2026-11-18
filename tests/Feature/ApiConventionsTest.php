@@ -57,6 +57,13 @@ class ApiConventionsTest extends TestCase
         );
     }
 
+    public function test_cors_is_disabled_for_api_responses(): void
+    {
+        $this->withHeader('Origin', 'https://untrusted.example')->get('/api/v1/health')
+            ->assertOk()
+            ->assertHeaderMissing('Access-Control-Allow-Origin');
+    }
+
     public function test_returns_404_error_envelope_when_api_route_is_missing(): void
     {
         $response = $this->get('/api/v1/missing');

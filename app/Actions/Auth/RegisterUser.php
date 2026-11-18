@@ -23,7 +23,7 @@ final class RegisterUser
      *     password: string
      * }  $attributes
      */
-    public function handle(array $attributes): User
+    public function handle(#[\SensitiveParameter] array $attributes): User
     {
         try {
             return DB::transaction(function () use ($attributes): User {

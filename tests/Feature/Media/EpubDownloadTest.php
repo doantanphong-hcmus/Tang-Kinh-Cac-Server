@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Media;
 
+use App\BookAccessLevel;
 use App\BookStatus;
 use App\Models\Book;
 use App\Models\BookFile;
@@ -112,5 +113,17 @@ final class EpubDownloadTest extends TestCase
         $this->getJson($url)
             ->assertNotFound()
             ->assertJsonPath('error.code', 'EPUB_NOT_FOUND');
+    }
+
+    public function test_returns_403_when_book_becomes_vip_after_url_is_signed(): void
+    {
+        $book = Book::factory()->published()->create();
+        $file = BookFile::factory()->for($book)->create();
+        $url = URL::temporarySignedRoute('media.download', now()->addMinutes(5), ['file' => $file]);
+        $book->update(['access_level' => BookAccessLevel::Vip]);
+
+        $this->getJson($url)
+            ->assertForbidden()
+            ->assertJsonPath('error.code', 'CONTENT_ACCESS_DENIED');
     }
 }
