@@ -9,7 +9,7 @@ This checklist traces each version 1 acceptance criterion to automated coverage 
 
 | # | Acceptance criterion | Evidence | Result |
 | --- | --- | --- | --- |
-| 1 | The project installs and runs locally on Windows without Docker. | Manual verification on the Windows development host: native PHP, Composer, and PostgreSQL were used; `php artisan about --only=environment` booted the application and the full suite connected to native PostgreSQL. The setup and base URLs are documented in [`README.md`](../README.md). | Pass |
+| 1 | The project installs and runs locally on Windows without Docker. | D05 clean-machine rehearsal below: a clean checkout was installed, migrated, seeded, and served using native PHP, Composer, and PostgreSQL. The health endpoint returned `ok` without Docker. | Pass |
 | 2 | PostgreSQL migrations create the complete schema from an empty database. | `php artisan migrate:fresh --env=testing --force`; `CatalogMigrationTest`; `BookFileMigrationTest`; `UserTest`. | Pass |
 | 3 | Seeders produce a usable development catalog and sample accounts. | `DatabaseSeederTest`; `EpubSeedTest`; `AudioSeedTest`. | Pass |
 | 4 | Registration, login, current-user lookup, and logout work through Sanctum. | `RegisterTest`; `LoginTest`; `CurrentUserTest`; `LogoutTest`. | Pass |
@@ -35,4 +35,14 @@ vendor\bin\yaml-lint openapi\openapi.yaml
 git diff --check
 ```
 
-D04 verifies the current development environment and acceptance traceability. D05 remains responsible for repeating setup from empty database and storage on a clean machine using only the README.
+## D05 clean-machine rehearsal
+
+The README procedure was rehearsed from detached commit `0b038b0` in a temporary checkout with no `vendor`, environment files, or media storage. The dedicated `tang_kinh_cac_test` database name was confirmed before its existing schema was wiped; development data was not touched.
+
+- Composer installed all 119 locked dependencies and every platform requirement passed.
+- Both application keys were generated, all 8 migrations ran from an empty database, and the seeders created 2 users, 8 books, and 3 media records.
+- The private media storage was populated from empty, the public storage link was created, and the server started at the documented Windows URL.
+- `GET /api/v1/health` returned `ok`.
+- The README test and quality commands passed: 199 tests, 1328 assertions, Pint, PHPStan, OpenAPI YAML lint, and a clean formatter diff.
+
+The PostgreSQL role and empty database are documented prerequisites requiring administrator access, so their operating-system installation and role creation were not repeated. The rehearsal worktree, spawned server processes, and temporary storage were removed after verification.
