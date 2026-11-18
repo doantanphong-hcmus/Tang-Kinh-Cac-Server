@@ -22,6 +22,20 @@ paths:
               password: correct-horse-battery-staple
               device_name: Pixel 9
       responses:
+        '400':
+          description: The JSON request body is malformed.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: BAD_REQUEST
+                  message: The request could not be understood.
+                  request_id: 01JD0EXAMPLE00000000000000
         '200':
           description: Login successful
           headers:
@@ -178,6 +192,20 @@ paths:
               password: correct-horse-battery-staple
               password_confirmation: correct-horse-battery-staple
       responses:
+        '400':
+          description: The JSON request body is malformed.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: BAD_REQUEST
+                  message: The request could not be understood.
+                  request_id: 01JD0EXAMPLE00000000000000
         '201':
           description: The reader account was created without authenticating it.
           headers:
