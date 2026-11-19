@@ -1,7 +1,7 @@
 # Version 1 Acceptance Evidence
 
 - **Specification:** [`specification.md`](specification.md), section 20
-- **Verification date:** 2026-11-18
+- **Verification date:** 2026-11-19
 - **Environment:** Windows, PHP 8.5.12, Composer 2.8.12, PostgreSQL 18.4, Laravel 13.42.0
 - **Result:** 14 of 14 acceptance criteria passed
 
@@ -20,9 +20,9 @@ This checklist traces each version 1 acceptance criterion to automated coverage 
 | 9 | VIP content is denied with the specified error. | VIP cases in `EpubDescriptorTest`, `EpubDownloadTest`, `AudiobookDescriptorTest`, `AudioTrackTest`, and `AudioTrackStreamTest`, asserting `403 CONTENT_ACCESS_DENIED`. | Pass |
 | 10 | All responses follow the documented envelopes and error codes. | `ApiConventionsTest`; endpoint feature tests; `OpenApiTest`. | Pass |
 | 11 | Storage paths and secrets never appear in API responses. | `EpubDescriptorTest`; `EpubSeedTest`; `AudioTrackTest`; `OpenBookFileStreamTest`; D03 security review. Only `.env.example` and `.env.testing.example` are tracked. | Pass |
-| 12 | Feature tests and code-quality checks pass. | Recorded D04 run: 199 tests and 1328 assertions; Pint, PHPStan, OpenAPI YAML lint, and `git diff --check` passed. CI repeats formatting, analysis, fresh migration, and tests in `.github/workflows/tests.yml`. | Pass |
+| 12 | Feature tests and code-quality checks pass. | Recorded R04 run: 204 tests and 1391 assertions; Pint, PHPStan, OpenAPI YAML lint, Composer platform and security audits, the tracked-secret scan, and `git diff --check` passed. CI repeats formatting, analysis, fresh migration, and tests in `.github/workflows/tests.yml`. | Pass |
 | 13 | The OpenAPI contract matches the running implementation. | `OpenApiTest` compares every runtime API route, method, authentication requirement, parameter, response, error example, and reference with `openapi/openapi.yaml`; YAML lint passed. | Pass |
-| 14 | Android can implement all four initial gateways without reading backend source code. | Manual contract review: `openapi/openapi.yaml` defines Auth, BookCatalog, BookContent, and Audiobook operations with request/response schemas and examples. `BookResourceTest`, endpoint feature tests, and `OpenApiTest` verify the documented transport shapes. | Pass |
+| 14 | Android can implement all four initial gateways without reading backend source code. | `AndroidGatewaySmokeTest` exercises Auth, BookCatalog, BookContent, and Audiobook against the seeded release-candidate data. `openapi/openapi.yaml`, `BookResourceTest`, endpoint feature tests, and `OpenApiTest` verify the documented transport shapes. | Pass |
 
 ## Recorded verification commands
 
@@ -46,3 +46,13 @@ The README procedure was rehearsed from detached commit `0b038b0` in a temporary
 - The README test and quality commands passed: 199 tests, 1328 assertions, Pint, PHPStan, OpenAPI YAML lint, and a clean formatter diff.
 
 The PostgreSQL role and empty database are documented prerequisites requiring administrator access, so their operating-system installation and role creation were not repeated. The rehearsal worktree, spawned server processes, and temporary storage were removed after verification.
+
+## R04 release audit
+
+The release audit was run on Windows against the dedicated `tang_kinh_cac_test` PostgreSQL database after R01 through R03. The database target was confirmed before the fresh migration removed its existing schema.
+
+- All 8 migrations ran from an empty database and the seeders created 2 users, 8 books, and 3 media records.
+- The full suite passed with 204 tests and 1391 assertions, including the performance guards and Android gateway release smoke test.
+- Pint, PHPStan, OpenAPI YAML validation, Composer platform checks, and `git diff --check` passed.
+- `composer audit --locked` reported no security vulnerability advisories.
+- The tracked-file scan found no populated environment file, common private-key or access-token pattern, or committed PHP debug call.
