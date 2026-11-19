@@ -56,3 +56,34 @@ The release audit was run on Windows against the dedicated `tang_kinh_cac_test` 
 - Pint, PHPStan, OpenAPI YAML validation, Composer platform checks, and `git diff --check` passed.
 - `composer audit --locked` reported no security vulnerability advisories.
 - The tracked-file scan found no populated environment file, common private-key or access-token pattern, or committed PHP debug call.
+
+## R05 release sign-off
+
+- **Decision date:** 2026-11-19
+- **Decision:** Accepted as the Tang Kinh Cac backend v1 release candidate.
+- **Scope of acceptance:** Backend API, PostgreSQL schema and seed data, private media delivery, OpenAPI contract, automated tests, and native Windows setup.
+- **Production status:** Not yet authorized for production deployment.
+
+### Release notes
+
+- Provides Sanctum registration, login, current-user, and current-token logout flows with stable API errors and request IDs.
+- Provides the authenticated catalog, accent-insensitive search, filters, deterministic pagination, genres, and book details.
+- Provides signed EPUB downloads and ordered audiobook tracks with bounded byte-range streaming for Android seeking.
+- Includes the R01 catalog content-availability fix, R02 performance guards, R03 Android gateway contract smoke test, and passing R04 release audit.
+
+### Known limitations and explicit exception
+
+- VIP metadata is visible, but all VIP EPUB and audiobook access remains denied until an entitlement system exists.
+- Cover delivery is deferred; `cover_url` remains `null`.
+- Version 1 uses local private media storage. Object storage, multi-instance storage coordination, deployment monitoring, and automated backups are not included.
+- Catalog search uses PostgreSQL `unaccent` scans; indexed search vectors are deferred until production query plans justify them.
+- `AndroidGatewaySmokeTest` validates the Android transport contract, signed downloads, checksums, and Media3-style ranges, but no APK or physical-device test was available in this repository. A real Android device smoke test is required before production release.
+
+### Backup and rollback assumptions
+
+- Back up PostgreSQL and `storage/app/private/media` together before deployment, and verify that both can be restored before serving traffic.
+- Preserve the deployed application artifact, environment configuration, and `APP_KEY`; changing the key invalidates outstanding signed media URLs.
+- Redeploy the last known-good artifact only when its code is compatible with the current schema. For data-changing migrations, prefer a forward fix or restore the matching database and media backup instead of a destructive rollback.
+- Review and revoke Sanctum tokens after a database restore when the backup may contain sessions that should no longer be active.
+
+No unresolved severity-critical or severity-high backend defect is recorded. The release candidate is accepted with the real-device Android smoke test as the explicit pre-production exception above.
